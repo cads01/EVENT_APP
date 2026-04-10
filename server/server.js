@@ -10,11 +10,8 @@ import eventRoutes from "./routes/eventRoutes.js";
 const app = express();
 
 app.use(cors({
-  origin: [
-    "http://localhost:5173",
-    "https://event-management-app-puce.vercel.app"
-  ],
-  credentials: true
+  origin: "*",
+  credentials: false
 }));
 
 app.get("/", (req, res) => {
