@@ -2,20 +2,33 @@ import express from "express";
 import Event from "../models/Event.js";
 import { protect, adminOnly } from "../middleware/auth.js";
 import { upload } from "../config/cloudinary.js";
+import cloudinary from "../config/cloudinary.js";
 
 const router = express.Router();
 
-// Create event with image (admin only)
+const uploadToCloudinary = (buffer) => {
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader.upload_stream(
+      { folder: "event-app" },
+      (error, result) => {
+        if (error) reject(error);
+        else resolve(result.secure_url);
+      }
+    ).end(buffer);
+  });
+};
+
+// Create event (admin only)
 router.post("/", protect, adminOnly, upload.single("image"), async (req, res) => {
   try {
     console.log("BODY:", req.body);
-    console.log("FILE:", req.file);
-    const eventData = {
+    let imageUrl = "";
+    if (req.file) imageUrl = await uploadToCloudinary(req.file.buffer);
+    const event = await Event.create({
       ...req.body,
       createdBy: req.user.id,
-      image: req.file ? req.file.path : "",
-    };
-    const event = await Event.create(eventData);
+      image: imageUrl,
+    });
     res.status(201).json(event);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -43,11 +56,11 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update event with image (admin only)
+// Update event (admin only)
 router.put("/:id", protect, adminOnly, upload.single("image"), async (req, res) => {
   try {
     const updateData = { ...req.body };
-    if (req.file) updateData.image = req.file.path;
+    if (req.file) updateData.image = await uploadToCloudinary(req.file.buffer);
     const event = await Event.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.json(event);
   } catch (err) {
