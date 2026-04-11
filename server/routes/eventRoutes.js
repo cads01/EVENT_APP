@@ -96,16 +96,17 @@ router.post("/:id/rsvp", protect, async (req, res) => {
 
     // Send confirmation email
     try {
-      await sendRSVPConfirmation({
-        to: user.email,
-        name: user.name,
-        eventTitle: event.title,
-        eventDate: event.date,
-        eventLocation: event.location,
-      });
-    } catch (emailErr) {
-      console.error("Email failed:", emailErr.message);
-    }
+  await sendRSVPConfirmation({
+    to: user.email,
+    name: user.name,
+    eventTitle: event.title,
+    eventDate: event.date,
+    eventLocation: event.location,
+  });
+  console.log("Email sent to:", user.email);
+} catch (emailErr) {
+  console.error("Email failed:", emailErr.message);
+}
 
     res.json({ message: "RSVP successful! Check your email for confirmation." });
   } catch (err) {
