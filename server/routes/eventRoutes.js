@@ -8,6 +8,8 @@ const router = express.Router();
 // Create event with image (admin only)
 router.post("/", protect, adminOnly, upload.single("image"), async (req, res) => {
   try {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
     const eventData = {
       ...req.body,
       createdBy: req.user.id,
