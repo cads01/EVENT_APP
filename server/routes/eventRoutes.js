@@ -3,6 +3,7 @@ import Event from "../models/Event.js";
 import { protect, adminOnly } from "../middleware/auth.js";
 import { upload } from "../config/cloudinary.js";
 import cloudinary from "../config/cloudinary.js";
+import { sendRSVPConfirmation } from "../config/email.js";
 
 const router = express.Router();
 
@@ -83,11 +84,30 @@ router.post("/:id/rsvp", protect, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: "Event not found" });
+
     if (event.attendees.includes(req.user.id))
       return res.status(400).json({ message: "Already RSVP'd" });
+
     event.attendees.push(req.user.id);
     await event.save();
-    res.json({ message: "RSVP successful" });
+
+    // Get user details for email
+    const user = await (await import("../models/User.js")).default.findById(req.user.id);
+
+    // Send confirmation email
+    try {
+      await sendRSVPConfirmation({
+        to: user.email,
+        name: user.name,
+        eventTitle: event.title,
+        eventDate: event.date,
+        eventLocation: event.location,
+      });
+    } catch (emailErr) {
+      console.error("Email failed:", emailErr.message);
+    }
+
+    res.json({ message: "RSVP successful! Check your email for confirmation." });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
