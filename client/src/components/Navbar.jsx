@@ -11,39 +11,55 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-        <Link to="/" className="text-2xl font-extrabold text-blue-600 tracking-tight">
-          🎟 EventApp
-        </Link>
-        <div className="flex gap-3 items-center">
-          {user ? (
-            <>
-              <span className="text-sm text-gray-500 hidden md:block">Hi, <strong>{user.name}</strong></span>
-              {user.role === "admin" && (
-                <Link to="/create"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
-                  + Create Event
-                </Link>
-              )}
-              <button onClick={handleLogout}
-                className="border border-red-400 text-red-500 px-4 py-2 rounded-lg text-sm hover:bg-red-50 transition">
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login"
-                className="text-gray-600 px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition">
-                Login
-              </Link>
-              <Link to="/register"
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition">
-                Get Started
-              </Link>
-            </>
-          )}
-        </div>
+    <nav style={{
+      backgroundColor: "white",
+      borderBottom: "1px solid #e5e7eb",
+      padding: "0 24px",
+      height: "64px",
+      display: "flex",
+      alignItems: "center",
+      justifyContent: "space-between",
+      position: "sticky",
+      top: 0,
+      zIndex: 50,
+      boxShadow: "0 1px 4px rgba(0,0,0,0.06)"
+    }}>
+      <Link to="/" style={{ textDecoration: "none" }}>
+        <span style={{ fontSize: "22px", fontWeight: 800, color: "#2563eb" }}>🎟 EventApp</span>
+      </Link>
+
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        {user ? (
+          <>
+            <span style={{ fontSize: "14px", color: "#6b7280" }}>
+              Hi, <strong style={{ color: "#111827" }}>{user.name}</strong>
+            </span>
+            {user.role === "admin" && (
+              <Link to="/create" style={{
+                backgroundColor: "#2563eb", color: "white",
+                padding: "8px 16px", borderRadius: "8px",
+                fontSize: "14px", fontWeight: 600, textDecoration: "none"
+              }}>+ Create Event</Link>
+            )}
+            <button onClick={handleLogout} style={{
+              border: "1px solid #fca5a5", color: "#ef4444",
+              backgroundColor: "transparent", padding: "8px 16px",
+              borderRadius: "8px", fontSize: "14px", cursor: "pointer"
+            }}>Logout</button>
+          </>
+        ) : (
+          <>
+            <Link to="/login" style={{
+              color: "#374151", padding: "8px 16px",
+              borderRadius: "8px", fontSize: "14px", textDecoration: "none"
+            }}>Login</Link>
+            <Link to="/register" style={{
+              backgroundColor: "#2563eb", color: "white",
+              padding: "8px 16px", borderRadius: "8px",
+              fontSize: "14px", fontWeight: 600, textDecoration: "none"
+            }}>Get Started</Link>
+          </>
+        )}
       </div>
     </nav>
   );

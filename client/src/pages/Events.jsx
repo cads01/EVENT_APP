@@ -13,50 +13,89 @@ export default function Events() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div style={{ minHeight: "100vh", backgroundColor: "#f9fafb" }}>
       {/* Hero */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white py-20 px-4 text-center">
-        <h1 className="text-5xl font-extrabold mb-4">Discover Events</h1>
-        <p className="text-blue-100 text-lg max-w-xl mx-auto">
+      <div style={{
+        background: "linear-gradient(135deg, #2563eb, #4f46e5)",
+        padding: "80px 24px",
+        textAlign: "center",
+        color: "white"
+      }}>
+        <h1 style={{ fontSize: "48px", fontWeight: 800, marginBottom: "16px", color: "white" }}>
+          Discover Events
+        </h1>
+        <p style={{ fontSize: "18px", color: "#bfdbfe", maxWidth: "500px", margin: "0 auto" }}>
           Find and attend the best events happening around you
         </p>
       </div>
 
-      {/* Events Grid */}
-      <div className="max-w-6xl mx-auto px-4 py-12">
+      {/* Grid */}
+      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "48px 24px" }}>
         {loading && (
-          <div className="text-center text-gray-400 py-20">Loading events...</div>
+          <p style={{ textAlign: "center", color: "#6b7280", padding: "80px 0" }}>Loading events...</p>
         )}
         {!loading && events.length === 0 && (
-          <div className="text-center text-gray-400 py-20">
-            <p className="text-5xl mb-4">🎟</p>
-            <p className="text-xl font-medium">No events yet</p>
-            <p className="text-sm mt-2">Check back soon!</p>
+          <div style={{ textAlign: "center", padding: "80px 0" }}>
+            <p style={{ fontSize: "48px" }}>🎟</p>
+            <p style={{ fontSize: "20px", color: "#374151", fontWeight: 600, marginTop: "16px" }}>No events yet</p>
           </div>
         )}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
+          gap: "32px"
+        }}>
           {events.map(event => (
             <Link to={`/events/${event._id}`} key={event._id}
-              className="bg-white rounded-2xl shadow hover:shadow-lg transition overflow-hidden group">
-              {event.image ? (
-                <img src={event.image} alt={event.title}
-                  className="w-full h-52 object-cover group-hover:scale-105 transition duration-300" />
-              ) : (
-                <div className="w-full h-52 bg-gradient-to-br from-blue-100 to-indigo-200 flex items-center justify-center text-4xl">
-                  🎟
-                </div>
-              )}
-              <div className="p-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-2 line-clamp-1">{event.title}</h2>
-                <p className="text-gray-500 text-sm mb-1">📍 {event.location}</p>
-                <p className="text-gray-400 text-sm mb-4">📅 {new Date(event.date).toDateString()}</p>
-                <div className="flex justify-between items-center">
-                  <span className={`font-bold text-lg ${event.price === 0 ? "text-green-600" : "text-blue-600"}`}>
-                    {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
-                  </span>
-                  <span className="text-xs text-gray-400">
-                    {event.attendees.length} attending
-                  </span>
+              style={{ textDecoration: "none", color: "inherit" }}>
+              <div style={{
+                backgroundColor: "white",
+                borderRadius: "16px",
+                boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
+                overflow: "hidden",
+                transition: "transform 0.2s, box-shadow 0.2s",
+                cursor: "pointer"
+              }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = "translateY(-4px)";
+                  e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = "translateY(0)";
+                  e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.08)";
+                }}>
+                {event.image ? (
+                  <img src={event.image} alt={event.title}
+                    style={{ width: "100%", height: "200px", objectFit: "cover" }} />
+                ) : (
+                  <div style={{
+                    width: "100%", height: "200px",
+                    background: "linear-gradient(135deg, #dbeafe, #e0e7ff)",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: "48px"
+                  }}>🎟</div>
+                )}
+                <div style={{ padding: "20px" }}>
+                  <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#111827", marginBottom: "8px" }}>
+                    {event.title}
+                  </h2>
+                  <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>
+                    📍 {event.location}
+                  </p>
+                  <p style={{ fontSize: "14px", color: "#9ca3af", marginBottom: "16px" }}>
+                    📅 {new Date(event.date).toDateString()}
+                  </p>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{
+                      fontSize: "18px", fontWeight: 700,
+                      color: event.price === 0 ? "#16a34a" : "#2563eb"
+                    }}>
+                      {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
+                    </span>
+                    <span style={{ fontSize: "13px", color: "#9ca3af" }}>
+                      {event.attendees.length} attending
+                    </span>
+                  </div>
                 </div>
               </div>
             </Link>
