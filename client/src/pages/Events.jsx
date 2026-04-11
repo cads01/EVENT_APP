@@ -16,15 +16,24 @@ export default function Events() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {events.map(event => (
           <Link to={`/events/${event._id}`} key={event._id}
-            className="bg-white rounded-lg shadow hover:shadow-md transition p-5">
-            <h2 className="text-xl font-semibold mb-2">{event.title}</h2>
-            <p className="text-gray-500 text-sm mb-2">{event.location}</p>
-            <p className="text-gray-400 text-sm mb-4">
-              {new Date(event.date).toDateString()}
-            </p>
-            <p className="text-blue-600 font-medium">
-              {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
-            </p>
+            className="bg-white rounded-lg shadow hover:shadow-md transition overflow-hidden">
+            {event.image ? (
+              <img src={event.image} alt={event.title} className="w-full h-48 object-cover" />
+            ) : (
+              <div className="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400">
+                No Image
+              </div>
+            )}
+            <div className="p-5">
+              <h2 className="text-xl font-semibold mb-2">{event.title}</h2>
+              <p className="text-gray-500 text-sm mb-2">📍 {event.location}</p>
+              <p className="text-gray-400 text-sm mb-4">
+                📅 {new Date(event.date).toDateString()}
+              </p>
+              <p className="text-blue-600 font-medium">
+                {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
+              </p>
+            </div>
           </Link>
         ))}
       </div>

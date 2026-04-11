@@ -1,14 +1,19 @@
-// routes/eventRoutes.js
 import express from "express";
 import Event from "../models/Event.js";
 import { protect, adminOnly } from "../middleware/auth.js";
+import { upload } from "../config/cloudinary.js";
 
 const router = express.Router();
 
-// Create event (admin only)
-router.post("/", protect, adminOnly, async (req, res) => {
+// Create event with image (admin only)
+router.post("/", protect, adminOnly, upload.single("image"), async (req, res) => {
   try {
-    const event = await Event.create({ ...req.body, createdBy: req.user.id });
+    const eventData = {
+      ...req.body,
+      createdBy: req.user.id,
+      image: req.file ? req.file.path : "",
+    };
+    const event = await Event.create(eventData);
     res.status(201).json(event);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -36,10 +41,12 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// Update event (admin only)
-router.put("/:id", protect, adminOnly, async (req, res) => {
+// Update event with image (admin only)
+router.put("/:id", protect, adminOnly, upload.single("image"), async (req, res) => {
   try {
-    const event = await Event.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const updateData = { ...req.body };
+    if (req.file) updateData.image = req.file.path;
+    const event = await Event.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.json(event);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -61,10 +68,8 @@ router.post("/:id/rsvp", protect, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: "Event not found" });
-
     if (event.attendees.includes(req.user.id))
       return res.status(400).json({ message: "Already RSVP'd" });
-
     event.attendees.push(req.user.id);
     await event.save();
     res.json({ message: "RSVP successful" });
