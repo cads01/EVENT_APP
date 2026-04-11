@@ -13,22 +13,27 @@ export default function CreateEvent() {
   const navigate = useNavigate();
 
   const handleSubmit = async () => {
-    try {
-      setLoading(true);
-      const formData = new FormData();
-      Object.keys(form).forEach(key => formData.append(key, form[key]));
-      if (image) formData.append("image", image);
+  try {
+    setLoading(true);
+    const formData = new FormData();
+    formData.append("title", form.title);
+    formData.append("description", form.description);
+    formData.append("date", form.date);
+    formData.append("location", form.location);
+    formData.append("price", form.price);
+    formData.append("capacity", form.capacity);
+    if (image) formData.append("image", image);
 
-      await API.post("/events", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      navigate("/");
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to create event");
-    } finally {
-      setLoading(false);
-    }
-  };
+    await API.post("/events", formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    navigate("/");
+  } catch (err) {
+    setError(err.response?.data?.message || "Failed to create event");
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
