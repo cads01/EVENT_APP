@@ -55,9 +55,11 @@ export default function EventDetail() {
           <img src={event.image} alt={event.title}
             className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-8xl">🎟</div>
+          <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center text-8xl">
+  🎟
+</div>
         )}
-        <div className="absolute inset-0 bg-black bg-opacity-30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         <div className="absolute bottom-6 left-6">
           <span className={`px-3 py-1 rounded-full text-sm font-semibold ${event.price === 0 ? "bg-green-500 text-white" : "bg-blue-500 text-white"}`}>
             {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
