@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
-import { usePaystackPayment } from "react-paystack";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -14,15 +13,6 @@ export default function EventDetail() {
     API.get(`/events/${id}`).then(res => setEvent(res.data));
   }, [id]);
 
-  const config = {
-    reference: new Date().getTime().toString(),
-    email: user?.email || "",
-    amount: event ? event.price * 100 : 0, // Paystack uses kobo
-    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
-  };
-
-  const initializePayment = usePaystackPayment(config);
-
   const handleRSVP = async () => {
     try {
       await API.post(`/events/${id}/rsvp`);
@@ -33,14 +23,19 @@ export default function EventDetail() {
   };
 
   const handlePayment = () => {
-    initializePayment({
-      onSuccess: () => {
+    const handler = window.PaystackPop.setup({
+      key: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY,
+      email: user.email,
+      amount: event.price * 100,
+      currency: "NGN",
+      callback: () => {
         handleRSVP();
       },
       onClose: () => {
         setMessage("Payment cancelled.");
       },
     });
+    handler.openIframe();
   };
 
   if (!event) return <p className="text-center mt-10">Loading...</p>;
