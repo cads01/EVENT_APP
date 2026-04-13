@@ -1,5 +1,6 @@
 // middleware/auth.js
-export const verifyToken = (req, res, next) => {
+import jwt from "jsonwebtoken";
+export const protect = (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer "))
@@ -14,7 +15,7 @@ export const verifyToken = (req, res, next) => {
   }
 };
 
-export const requireAdmin = (req, res, next) => {
+export const adminOnly = (req, res, next) => {
   if (req.user.role !== "admin")
     return res.status(403).json({ message: "Admins only" });
   next();
