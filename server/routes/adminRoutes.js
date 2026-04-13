@@ -2,7 +2,7 @@
 // Mount this in server.js: app.use("/api/admin", adminRoutes)
 import express from "express";
 import { sendReminders } from "../jobs/reminderJob.js";
-import { verifyToken, requireAdmin } from "../middleware/authMiddleware.js";
+import { verifyToken, requireAdmin } from "../middleware/auth.js";
 
 const router = express.Router();
 
