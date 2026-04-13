@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
-impo
+import Countdown from "../components/Countdown";
+import GetDirections from "../components/GetDirections";
+
 export default function EventDetail() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -92,6 +94,10 @@ export default function EventDetail() {
           <div className="border-t pt-6 mb-8">
             <h2 className="text-lg font-bold text-gray-800 mb-3">About this event</h2>
             <p className="text-gray-600 leading-relaxed">{event.description}</p>
+            <div className="mt-6 space-y-4">
+              <Countdown eventDate={event.date} />
+              <GetDirections venue={event.venue} location={event.location} />
+            </div>
           </div>
 
           {/* Capacity bar */}
