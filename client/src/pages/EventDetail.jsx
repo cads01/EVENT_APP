@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
-
+impo
 export default function EventDetail() {
   const { id } = useParams();
   const { user } = useAuth();
@@ -13,8 +13,7 @@ export default function EventDetail() {
   useEffect(() => {
     API.get(`/events/${id}`).then(res => setEvent(res.data));
   }, [id]);
-
-  const handleRSVP = async () => {
+ async () => {
     try {
       setLoading(true);
       await API.post(`/events/${id}/rsvp`);
