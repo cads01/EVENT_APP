@@ -1,36 +1,53 @@
-import { config } from "dotenv";
-config({ path: "./.env" });
+import dotenv from "dotenv";
+dotenv.config();
 
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+
 import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
-import { startReminderJob } from "./jobs/reminderJob.js";
 import adminRoutes from "./routes/adminRoutes.js";
-
+import { startReminderJob } from "./jobs/reminderJob.js";
 
 const app = express();
 
-app.use(cors({
-  origin: "*",
-  credentials: false
-}));
-
+// middleware
+app.use(cors({ origin: "*", credentials: false }));
 app.use(express.json());
+
+// routes
 app.use("/api/admin", adminRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/events", eventRoutes);
+
+// health check
 app.get("/", (req, res) => {
   res.send("API is running...");
 });
 
-app.use("/api/auth", authRoutes);
-app.use("/api/events", eventRoutes);
+// validate env
+if (!process.env.MONGO_URI) {
+  throw new Error("MONGO_URI is missing in environment variables");
+}
 
+// DB + startup
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("DB Connected");
-    startReminderJob(); // ← start cron after DB is ready
+
+    try {
+      startReminderJob();
+      console.log("Reminder job started");
+    } catch (err) {
+      console.error("Cron job failed:", err.message);
+    }
   })
   .catch((err) => console.error("DB connection failed:", err.message));
 
-app.listen(5000, () => console.log("Server running on port 5000"));
+// port fix for Render
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

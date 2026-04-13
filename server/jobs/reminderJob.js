@@ -4,7 +4,12 @@ import Event from "../models/Event.js";
 import User from "../models/User.js";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+export const getResend = () => {
+  if (!process.env.RESEND_API_KEY) {
+    throw new Error("RESEND_API_KEY is missing");
+  }
+  return new Resend(process.env.RESEND_API_KEY);
+};
 
 // Build Google Maps directions URL
 // If we have venue coords use them, otherwise fall back to address string
