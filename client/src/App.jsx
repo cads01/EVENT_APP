@@ -6,6 +6,7 @@ import Events from "./pages/Events";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import EventDetail from "./pages/EventDetail";
+import Trash from "./pages/Trash";
 import Navbar from "./components/Navbar";
 
 export default function App() {
@@ -27,7 +28,11 @@ export default function App() {
             <EditEvent />
           </ProtectedRoute>
         } />
-        
+        <Route path="/trash" element={
+          <ProtectedRoute adminOnly>
+            <Trash />
+          </ProtectedRoute>
+        } />
       </Routes>
     </>
   );
