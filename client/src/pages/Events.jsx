@@ -78,16 +78,21 @@ export default function Events() {
           Find and attend the best events happening around you
         </p>
         {isAdmin && (
-          <button
-            onClick={() => navigate("/create")}
-            className="inline-flex items-center gap-2 bg-white text-blue-600 font-bold px-6 py-3 rounded-xl hover:bg-blue-50 transition text-sm"
-          >
-            + Create New Event
-          </button>
-        )}
-           <Link to="/trash" className="bg-white/90 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white transition">
+          <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
+            <button
+              onClick={() => navigate("/create")}
+              className="inline-flex items-center gap-2 bg-white text-blue-600 font-bold px-6 py-3 rounded-xl hover:bg-blue-50 transition text-sm"
+            >
+              + Create New Event
+            </button>
+            <button
+              onClick={() => navigate("/trash")}
+              className="inline-flex items-center gap-2 bg-white text-gray-700 font-bold px-6 py-3 rounded-xl hover:bg-gray-100 transition text-sm"
+            >
               🗑️ Trash
-            </Link>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Grid */}
