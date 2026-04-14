@@ -13,13 +13,20 @@ export default function EventDetail() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    API.get(`/events/${id}`).then(res => setEvent(res.data));
+    API.get(`/events/${id}`)
+      .then(res => setEvent(res.data))
+      .catch(() => setMessage("Failed to load event."));
   }, [id]);
- async () => {
+
+  // ✅ Fixed: properly defined function, not detached
+  const handleRSVP = async () => {
     try {
       setLoading(true);
       await API.post(`/events/${id}/rsvp`);
       setMessage("success");
+      // Refresh attendee count
+      const res = await API.get(`/events/${id}`);
+      setEvent(res.data);
     } catch (err) {
       setMessage(err.response?.data?.message || "RSVP failed");
     } finally {
@@ -57,8 +64,8 @@ export default function EventDetail() {
             className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-blue-500 to-indigo-700 flex items-center justify-center text-8xl">
-  🎟
-</div>
+            🎟
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
         <div className="absolute bottom-6 left-6">
@@ -93,7 +100,7 @@ export default function EventDetail() {
 
           <div className="border-t pt-6 mb-8">
             <h2 className="text-lg font-bold text-gray-800 mb-3">About this event</h2>
-            <p className="text-gray-600 leading-relaxed">{event.description}</p>
+            <p className="text-gray-600 leading-relaxed whitespace-pre-line">{event.description}</p>
             <div className="mt-6 space-y-4">
               <Countdown eventDate={event.date} />
               <GetDirections venue={event.venue} location={event.location} />
@@ -161,7 +168,7 @@ export default function EventDetail() {
 
         {/* Organizer */}
         {event.createdBy && (
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
             <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Organizer</h2>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
@@ -174,12 +181,6 @@ export default function EventDetail() {
             </div>
           </div>
         )}
-
-        {/* Event Details */}
-        <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
-          <Countdown eventDate={event.date} />
-          <GetDirections venue={event.venue} location={event.location} />
-        </div>
       </div>
     </div>
   );
