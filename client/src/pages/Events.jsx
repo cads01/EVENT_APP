@@ -102,6 +102,9 @@ export default function Events() {
                 Create your first event
               </button>
             )}
+              <Link to="/trash" className="bg-white/90 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white transition">
+              🗑️ Trash
+            </Link>
           </div>
         )}
 
