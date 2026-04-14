@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
+import Countdown from "../components/Countdown";
+import GetDirections from "../components/GetDirections";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -169,6 +171,12 @@ export default function EventDetail() {
             </div>
           </div>
         )}
+
+        {/* Event Details */}
+        <div className="bg-white rounded-2xl shadow-sm p-6 space-y-4">
+          <Countdown eventDate={event.date} />
+          <GetDirections venue={event.venue} location={event.location} />
+        </div>
       </div>
     </div>
   );
