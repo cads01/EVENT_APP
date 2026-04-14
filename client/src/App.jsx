@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Events from "./pages/Events";
 import CreateEvent from "./pages/CreateEvent";
+import EditEvent from "./pages/EditEvent";
 import EventDetail from "./pages/EventDetail";
 import Navbar from "./components/Navbar";
 
@@ -21,6 +22,12 @@ export default function App() {
             <CreateEvent />
           </ProtectedRoute>
         } />
+        <Route path="/events/:id/edit" element={
+          <ProtectedRoute adminOnly>
+            <EditEvent />
+          </ProtectedRoute>
+        } />
+        
       </Routes>
     </>
   );
