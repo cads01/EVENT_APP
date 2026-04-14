@@ -4,6 +4,7 @@ config({ path: "./.env" });
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
+
 import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
 import { startReminderJob } from "./jobs/reminderJob.js";
@@ -11,10 +12,9 @@ import adminRoutes from "./routes/adminRoutes.js";
 
 const app = express();
 
-app.use(cors({
-  origin: "*",
-  credentials: false
-}));
+// middleware
+app.use(cors({ origin: "*", credentials: false }));
+app.use(express.json());
 
 app.use(express.json());
 
@@ -26,6 +26,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/admin", adminRoutes);
 
+// DB + startup
 mongoose.connect(process.env.MONGO_URI)
   .then(() => {
     console.log("DB Connected");

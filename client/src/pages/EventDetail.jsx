@@ -15,8 +15,7 @@ export default function EventDetail() {
   useEffect(() => {
     API.get(`/events/${id}`).then(res => setEvent(res.data));
   }, [id]);
-
-  const handleRSVP = async () => {
+ async () => {
     try {
       setLoading(true);
       await API.post(`/events/${id}/rsvp`);
@@ -95,6 +94,10 @@ export default function EventDetail() {
           <div className="border-t pt-6 mb-8">
             <h2 className="text-lg font-bold text-gray-800 mb-3">About this event</h2>
             <p className="text-gray-600 leading-relaxed">{event.description}</p>
+            <div className="mt-6 space-y-4">
+              <Countdown eventDate={event.date} />
+              <GetDirections venue={event.venue} location={event.location} />
+            </div>
           </div>
 
           {/* Capacity bar */}

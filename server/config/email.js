@@ -1,8 +1,11 @@
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+
+export const getResend = () =>
+  new Resend(process.env.RESEND_API_KEY);
 
 export const sendRSVPConfirmation = async ({ to, name, eventTitle, eventDate, eventLocation }) => {
+  const resend = getResend();
   await resend.emails.send({
     from: "EventApp <onboarding@resend.dev>",
     to: "adedolapo.adeniyi246@yahoo.com", // your yahoo email here

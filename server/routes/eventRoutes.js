@@ -1,6 +1,6 @@
 import express from "express";
 import Event from "../models/Event.js";
-import { protect, adminOnly } from "../middleware/auth.js";
+import { verifyToken, requireAdmin } from "../middleware/auth.js";
 import { upload } from "../config/cloudinary.js";
 import cloudinary from "../config/cloudinary.js";
 import { sendRSVPConfirmation } from "../config/email.js";
@@ -20,7 +20,7 @@ const uploadToCloudinary = (buffer) => {
 };
 
 // Create event (admin only)
-router.post("/", protect, adminOnly, upload.single("image"), async (req, res) => {
+router.post("/", verifyToken, requireAdmin, upload.single("image"), async (req, res) => {
   try {
     console.log("BODY:", req.body);
     let imageUrl = "";
@@ -58,7 +58,7 @@ router.get("/:id", async (req, res) => {
 });
 
 // Update event (admin only)
-router.put("/:id", protect, adminOnly, upload.single("image"), async (req, res) => {
+router.put("/:id", verifyToken, requireAdmin, upload.single("image"), async (req, res) => {
   try {
     const updateData = { ...req.body };
     if (req.file) updateData.image = await uploadToCloudinary(req.file.buffer);
@@ -70,7 +70,7 @@ router.put("/:id", protect, adminOnly, upload.single("image"), async (req, res) 
 });
 
 // Delete event (admin only)
-router.delete("/:id", protect, adminOnly, async (req, res) => {
+router.delete("/:id", verifyToken, requireAdmin, async (req, res) => {
   try {
     await Event.findByIdAndDelete(req.params.id);
     res.json({ message: "Event deleted" });
@@ -80,7 +80,7 @@ router.delete("/:id", protect, adminOnly, async (req, res) => {
 });
 
 // RSVP to event (logged in users)
-router.post("/:id/rsvp", protect, async (req, res) => {
+router.post("/:id/rsvp", verifyToken, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: "Event not found" });
