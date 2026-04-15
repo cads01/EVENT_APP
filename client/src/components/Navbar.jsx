@@ -34,6 +34,8 @@ export default function Navbar() {
             <span style={{ fontSize: "14px", color: "#6b7280" }}>
               Hi, <strong style={{ color: "#111827" }}>{user.name}</strong>
             </span>
+            {user?.role === "admin" && <Link to="/admin">Admin</Link>}
+{["admin","organizer"].includes(user?.role) && <Link to="/dashboard">Dashboard</Link>}
             {user.role === "admin" && (
               <Link to="/create" style={{
                 backgroundColor: "#2563eb", color: "white",

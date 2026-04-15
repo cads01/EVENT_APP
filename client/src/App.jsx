@@ -7,6 +7,8 @@ import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import EventDetail from "./pages/EventDetail";
 import Trash from "./pages/Trash";
+import AdminDashboard from "./pages/AdminDashboard";
+import OrganizerDashboard from "./pages/OrganizerDashboard";
 import Navbar from "./components/Navbar";
 
 export default function App() {
@@ -19,18 +21,28 @@ export default function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/create" element={
-          <ProtectedRoute adminOnly>
+          <ProtectedRoute roles={["admin", "organizer"]}>
             <CreateEvent />
           </ProtectedRoute>
         } />
         <Route path="/events/:id/edit" element={
-          <ProtectedRoute adminOnly>
+          <ProtectedRoute roles={["admin", "organizer"]}>
             <EditEvent />
           </ProtectedRoute>
         } />
         <Route path="/trash" element={
-          <ProtectedRoute adminOnly>
+          <ProtectedRoute roles={["admin"]}>
             <Trash />
+          </ProtectedRoute>
+        } />
+        <Route path="/admin" element={
+          <ProtectedRoute roles={["admin"]}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="/dashboard" element={
+          <ProtectedRoute roles={["admin", "organizer"]}>
+            <OrganizerDashboard />
           </ProtectedRoute>
         } />
       </Routes>
