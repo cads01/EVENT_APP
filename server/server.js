@@ -7,6 +7,9 @@ import cors from "cors";
 
 import authRoutes from "./routes/authRoutes.js";
 import eventRoutes from "./routes/eventRoutes.js";
+import eventPostRoutes from "./routes/eventPostRoutes.js";
+import donationRoutes from "./routes/donationRoutes.js";
+import blogRoutes from "./routes/blogRoutes.js";
 import { startReminderJob } from "./jobs/reminderJob.js";
 import adminRoutes from "./routes/adminRoutes.js";
 
@@ -24,6 +27,9 @@ app.get("/", (req, res) => {
 
 app.use("/api/auth", authRoutes);
 app.use("/api/events", eventRoutes);
+app.use("/api/events", eventPostRoutes);
+app.use("/api/events", donationRoutes);
+app.use("/api/blogs", blogRoutes);
 app.use("/api/admin", adminRoutes);
 
 // DB + startup

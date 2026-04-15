@@ -16,6 +16,13 @@ const eventSchema = new mongoose.Schema({
   price: { type: Number, default: 0 },
   capacity: { type: Number, default: 100 },
   attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+  comments: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    text: { type: String },
+    createdAt: { type: Date, default: Date.now }
+  }],
+  posts: { type: Number, default: 0 }, // Count of picture posts
+  donations: { type: Number, default: 0 }, // Total donations
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 }, { timestamps: true });
 

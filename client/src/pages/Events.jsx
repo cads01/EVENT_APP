@@ -3,10 +3,15 @@ import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { formatEventTimeShort } from "../utils/timeFormatting";
+import EventCarousel from "../components/EventCarousel";
+import BlogCarousel from "../components/BlogCarousel";
 
 export default function Events() {
   const [events, setEvents] = useState([]);
+  const [blogs, setBlogs] = useState([]);
+  const [ongoingEvents, setOngoingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [blogsLoading, setBlogsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null); // event to confirm delete
   const [deleting, setDeleting] = useState(false);
   const { user } = useAuth();
@@ -14,9 +19,36 @@ export default function Events() {
   const isAdmin = user?.role === "admin";
 
   useEffect(() => {
+    // Fetch events
     API.get("/events")
-      .then(res => setEvents(res.data))
+      .then(res => {
+        setEvents(res.data);
+        
+        // Calculate ongoing events (within 24 hours)
+        const now = new Date();
+        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+        const upcoming = res.data.filter(e => {
+          const eventDate = new Date(e.date);
+          return eventDate >= now && eventDate <= tomorrow;
+        });
+        setOngoingEvents(upcoming);
+      })
       .finally(() => setLoading(false));
+
+    // Fetch featured blogs
+    API.get("/api/blogs")
+      .then(res => {
+        // Sort by featured and recent
+        const sorted = res.data.sort((a, b) => {
+          if (a.featured === b.featured) {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+          }
+          return b.featured - a.featured;
+        });
+        setBlogs(sorted.slice(0, 12)); // Get top 12 blogs
+      })
+      .catch(err => console.log("Blogs not available yet"))
+      .finally(() => setBlogsLoading(false));
   }, []);
 
   const handleDelete = async () => {
@@ -98,6 +130,32 @@ export default function Events() {
 
       {/* Grid */}
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "48px 24px" }}>
+        {/* Ongoing Events Carousel */}
+        {!loading && ongoingEvents.length > 0 && (
+          <div className="mb-16">
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">🔴 Ongoing Events</h2>
+              <p className="text-gray-600">Happening within the next 24 hours</p>
+            </div>
+            <EventCarousel events={ongoingEvents} />
+          </div>
+        )}
+
+        {/* Blogs & Comments Carousel */}
+        {!blogsLoading && blogs.length > 0 && (
+          <div className="mb-16">
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">📰 Latest Blogs & Comments</h2>
+              <p className="text-gray-600">What the community is saying about events</p>
+            </div>
+            <BlogCarousel blogs={blogs} />
+          </div>
+        )}
+
+        {/* All Events Section */}
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold text-gray-900">All Events</h2>
+        </div>
         {loading && (
           <p style={{ textAlign: "center", color: "#6b7280", padding: "80px 0" }}>Loading events...</p>
         )}

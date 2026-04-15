@@ -4,6 +4,10 @@ import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
 import Countdown from "../components/Countdown";
 import GetDirections from "../components/GetDirections";
+import EventComments from "../components/EventComments";
+import EventPosts from "../components/EventPosts";
+import EventDonation from "../components/EventDonation";
+import EventInsights from "../components/EventInsights";
 import { formatEventTime, getUserTimezone } from "../utils/timeFormatting";
 
 export default function EventDetail() {
@@ -16,6 +20,7 @@ export default function EventDetail() {
   const [attendees, setAttendees] = useState(null);
   const [showAttendees, setShowAttendees] = useState(false);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
+  const [ticketStatus, setTicketStatus] = useState(null);
   const isAdmin = user?.role === "admin";
 
   const refreshEvent = () =>
@@ -28,6 +33,9 @@ export default function EventDetail() {
   const isAttending = event?.attendees?.some(
     a => (a._id || a).toString() === (user?._id || user?.id)
   );
+
+  const eventStarted = event ? new Date() >= new Date(event.date) : false;
+  const canSharePhotos = isAttending && (eventStarted || ticketStatus === "used");
 
   const handleRSVP = async () => {
     try {
@@ -79,6 +87,27 @@ export default function EventDetail() {
       setAttendees([]);
     } finally {
       setLoadingAttendees(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || !isAttending) return;
+    API.get(`/events/${id}/ticket`)
+      .then(res => setTicketStatus(res.data.status))
+      .catch(() => setTicketStatus(null));
+  }, [id, user, isAttending]);
+
+  const handleCheckIn = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+      await API.post(`/events/${id}/checkin`);
+      setTicketStatus("used");
+      setMessage("Checked in successfully. You can now share photos before the event starts.");
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Check-in failed");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -252,6 +281,18 @@ export default function EventDetail() {
                 </button>
               )}
             </div>
+            {isAttending && !canSharePhotos && (
+              <div className="mt-4 p-4 rounded-xl border border-yellow-200 bg-yellow-50 text-yellow-700 text-sm">
+                Check in before the event starts to post pictures early.
+                <button
+                  onClick={handleCheckIn}
+                  disabled={loading}
+                  className="mt-3 w-full inline-flex justify-center items-center rounded-lg bg-yellow-500 px-4 py-2 text-white font-semibold hover:bg-yellow-600 transition disabled:opacity-50"
+                >
+                  {loading ? "Checking in..." : "Check in now"}
+                </button>
+              </div>
+            )}
           ) : (
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 text-center">
               <p className="text-gray-600 mb-4">You need to be logged in to RSVP</p>
@@ -264,7 +305,7 @@ export default function EventDetail() {
         </div>
 
         {event.createdBy && (
-          <div className="bg-white rounded-2xl shadow-sm p-6">
+          <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
             <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Organizer</h2>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
@@ -277,6 +318,37 @@ export default function EventDetail() {
             </div>
           </div>
         )}
+
+        {/* Event Insights */}
+        <EventInsights event={event} />
+
+        {/* Donations Section */}
+        <EventDonation 
+          eventId={id} 
+          user={user}
+          currentDonations={event.donations || 0}
+          onDonation={() => {
+            API.get(`/events/${id}`).then(res => setEvent(res.data));
+          }}
+        />
+
+        {/* Picture Posts Section */}
+        <EventPosts 
+          eventId={id}
+          user={user}
+          isAttending={isAttending}
+          canPost={canSharePhotos}
+          onPostsChange={() => {
+            API.get(`/events/${id}`).then(res => setEvent(res.data));
+          }}
+        />
+
+        {/* Comments Section */}
+        <EventComments 
+          eventId={id}
+          user={user}
+          comments={event.comments || []}
+        />
       </div>
     </div>
   );

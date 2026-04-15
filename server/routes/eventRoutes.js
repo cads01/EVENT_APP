@@ -189,6 +189,37 @@ router.get("/:id/attendees", verifyToken, requireOrganizer, async (req, res) => 
   }
 });
 
+// ─── Get current user's ticket status ─────────────────────────────────────────
+router.get("/:id/ticket", verifyToken, async (req, res) => {
+  try {
+    const ticket = await Ticket.findOne({ event: req.params.id, user: req.user.id });
+    if (!ticket) return res.status(404).json({ message: "Ticket not found" });
+    res.json({ status: ticket.status });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─── Check in attendee before the event starts ─────────────────────────────────
+router.post("/:id/checkin", verifyToken, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+    if (!event.attendees.some(a => a.toString() === req.user.id)) {
+      return res.status(403).json({ message: "Only RSVP'd attendees can check in" });
+    }
+
+    const ticket = await Ticket.findOne({ event: req.params.id, user: req.user.id, status: "active" });
+    if (!ticket) return res.status(400).json({ message: "No active ticket found for check-in" });
+
+    ticket.status = "used";
+    await ticket.save();
+    res.json({ message: "Checked in successfully" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
 // ─── Update event ─────────────────────────────────────────────────────────────
 router.put("/:id", verifyToken, requireOrganizer, upload.single("image"), async (req, res) => {
   try {
@@ -275,6 +306,40 @@ router.delete("/:id/rsvp", verifyToken, async (req, res) => {
       { status: "cancelled" }
     );
     res.json({ message: "RSVP cancelled" });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─── Add comment to event ──────────────────────────────────────────────────────
+router.post("/:id/comment", verifyToken, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ message: "Comment text required" });
+
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+
+    event.comments.push({
+      user: req.user.id,
+      text,
+      createdAt: new Date()
+    });
+    await event.save();
+    await event.populate("comments.user", "name email");
+    res.json(event);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ─── Get comments for event ───────────────────────────────────────────────────
+router.get("/:id/comments", async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id)
+      .populate("comments.user", "name email");
+    if (!event) return res.status(404).json({ message: "Event not found" });
+    res.json(event.comments);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
