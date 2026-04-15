@@ -36,7 +36,7 @@ export default function Events() {
       .finally(() => setLoading(false));
 
     // Fetch featured blogs
-    API.get("/api/blogs")
+    API.get("/blogs")
       .then(res => {
         // Sort by featured and recent
         const sorted = res.data.sort((a, b) => {
