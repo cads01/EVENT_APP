@@ -280,7 +280,7 @@ export default function EventDetail() {
                   {loading ? "Processing..." : "RSVP Now — It's Free!"}
                 </button>
               )}
-            </div>
+        
             {isAttending && !canSharePhotos && (
               <div className="mt-4 p-4 rounded-xl border border-yellow-200 bg-yellow-50 text-yellow-700 text-sm">
                 Check in before the event starts to post pictures early.
@@ -293,6 +293,7 @@ export default function EventDetail() {
                 </button>
               </div>
             )}
+          </div>
           ) : (
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 text-center">
               <p className="text-gray-600 mb-4">You need to be logged in to RSVP</p>
