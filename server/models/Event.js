@@ -5,6 +5,7 @@ const eventSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: { type: String, required: true },
   date: { type: Date, required: true },
+  timezone: { type: String, default: "UTC" },
   location: { type: String, required: true },
   venue: {
     address: { type: String, default: "" },

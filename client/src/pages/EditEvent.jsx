@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { API } from "../api";
 import { useNavigate, useParams } from "react-router-dom";
+import { getUserTimezone, COMMON_TIMEZONES } from "../utils/timeFormatting";
 
 export default function EditEvent() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [form, setForm] = useState({
     title: "", description: "", date: "",
-    location: "", price: 0, capacity: 100
+    location: "", timezone: getUserTimezone(), price: 0, capacity: 100
   });
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -24,6 +25,7 @@ export default function EditEvent() {
           description: e.description,
           date: e.date?.slice(0, 10), // format for date input
           location: e.location,
+          timezone: e.timezone || getUserTimezone(),
           price: e.price,
           capacity: e.capacity,
         });
@@ -47,6 +49,7 @@ export default function EditEvent() {
       formData.append("title", form.title);
       formData.append("description", form.description);
       formData.append("date", form.date);
+      formData.append("timezone", form.timezone);
       formData.append("location", form.location);
       formData.append("price", form.price);
       formData.append("capacity", form.capacity);
@@ -125,6 +128,18 @@ export default function EditEvent() {
                 onChange={e => setForm({ ...form, location: e.target.value })}
               />
             </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+            <select
+              className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              value={form.timezone}
+              onChange={e => setForm({ ...form, timezone: e.target.value })}>
+              {COMMON_TIMEZONES.map(tz => (
+                <option key={tz} value={tz}>{tz}</option>
+              ))}
+            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

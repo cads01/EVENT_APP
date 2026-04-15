@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { formatEventTimeShort } from "../utils/timeFormatting";
 
 export default function Events() {
   const [events, setEvents] = useState([]);
@@ -156,8 +157,11 @@ export default function Events() {
                     <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>
                       📍 {event.location}
                     </p>
-                    <p style={{ fontSize: "14px", color: "#9ca3af", marginBottom: "16px" }}>
-                      📅 {new Date(event.date).toDateString()}
+                    <p style={{ fontSize: "14px", color: "#9ca3af", marginBottom: "4px" }}>
+                      📅 {formatEventTimeShort(event.date, event.timezone || 'UTC')}
+                    </p>
+                    <p style={{ fontSize: "12px", color: "#d1d5db", marginBottom: "16px" }}>
+                      🌍 {event.timezone || 'UTC'}
                     </p>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                       <span style={{

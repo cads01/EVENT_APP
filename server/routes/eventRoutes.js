@@ -127,7 +127,7 @@ router.post("/trash/:id/restore", verifyToken, requireAdmin, async (req, res) =>
     if (!deleted) return res.status(404).json({ message: "Not found in trash" });
     const restored = await Event.create({
       title: deleted.title, description: deleted.description,
-      date: deleted.date, location: deleted.location,
+      date: deleted.date, timezone: deleted.timezone, location: deleted.location,
       venue: deleted.venue, image: deleted.image,
       price: deleted.price, capacity: deleted.capacity,
       attendees: deleted.attendees, createdBy: deleted.createdBy,

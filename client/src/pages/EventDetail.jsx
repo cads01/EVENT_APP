@@ -4,6 +4,7 @@ import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
 import Countdown from "../components/Countdown";
 import GetDirections from "../components/GetDirections";
+import { formatEventTime, getUserTimezone } from "../utils/timeFormatting";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -175,8 +176,9 @@ export default function EventDetail() {
             </div>
             <div className="bg-gray-50 rounded-xl p-4 text-center">
               <p className="text-2xl mb-1">📅</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Date</p>
-              <p className="text-gray-800 font-semibold mt-1">{new Date(event.date).toDateString()}</p>
+              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Date & Time</p>
+              <p className="text-gray-800 font-semibold mt-1 text-sm">{formatEventTime(event.date, event.timezone || 'UTC')}</p>
+              <p className="text-xs text-gray-500 mt-2">Your time: {formatEventTime(event.date, getUserTimezone())}</p>
             </div>
             <div onClick={isAdmin ? loadAttendees : undefined}
               className={`rounded-xl p-4 text-center ${isAdmin ? "bg-blue-50 hover:bg-blue-100 cursor-pointer" : "bg-gray-50"} transition`}>

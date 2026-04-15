@@ -6,6 +6,7 @@ const deletedEventSchema = new mongoose.Schema({
   title:       { type: String, required: true },
   description: { type: String },
   date:        { type: Date },
+  timezone:    { type: String, default: "UTC" },
   location:    { type: String },
   venue: {
     address: { type: String, default: "" },
