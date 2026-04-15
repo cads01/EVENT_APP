@@ -17,7 +17,7 @@ export default function BlogDetail() {
   const isAuthor = blog?.author?._id === user?._id;
 
   useEffect(() => {
-    API.get(`/api/blogs/${id}`)
+    API.get(`/blogs/${id}`)
       .then(res => setBlog(res.data))
       .catch(err => setMessage("Blog not found"))
       .finally(() => setLoading(false));
@@ -30,7 +30,7 @@ export default function BlogDetail() {
     }
     try {
       setLiking(true);
-      const res = await API.post(`/api/blogs/${id}/like`);
+      const res = await API.post(`/blogs/${id}/like`);
       setBlog(res.data);
     } catch (err) {
       setMessage("Failed to like blog");
@@ -50,7 +50,7 @@ export default function BlogDetail() {
     }
     try {
       setSubmittingComment(true);
-      const res = await API.post(`/api/blogs/${id}/comment`, { text: commentText });
+      const res = await API.post(`/blogs/${id}/comment`, { text: commentText });
       setBlog(res.data);
       setCommentText("");
       setMessage("Comment added!");
@@ -65,7 +65,7 @@ export default function BlogDetail() {
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this blog?")) return;
     try {
-      await API.delete(`/api/blogs/${id}`);
+      await API.delete(`/blogs/${id}`);
       navigate("/");
     } catch (err) {
       setMessage("Failed to delete blog");
