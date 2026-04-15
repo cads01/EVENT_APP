@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { API } from "../api";
 
-export default function EventPosts({ eventId, user, isAttending = false, canPost = false, onPostsChange }) {
+export default function EventPosts({ eventId, user, isAttending = false, canPost = false, requiresModeration = false, onPostsChange }) {
   const [posts, setPosts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
@@ -56,7 +56,10 @@ export default function EventPosts({ eventId, user, isAttending = false, canPost
       setImagePreviews([]);
       setCaption("");
       setShowForm(false);
-      setMessage("Your photos have been submitted and are pending moderator approval.");
+      setMessage(requiresModeration
+        ? "Your photos have been submitted and are pending moderator approval."
+        : "Your photos have been published successfully!"
+      );
       onPostsChange?.();
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to post");

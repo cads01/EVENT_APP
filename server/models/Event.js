@@ -15,6 +15,8 @@ const eventSchema = new mongoose.Schema({
   image: { type: String, default: "" },
   price: { type: Number, default: 0 },
   capacity: { type: Number, default: 100 },
+  requiresModeration: { type: Boolean, default: false }, // VIP events or special code events require post moderation
+  specialCode: { type: String, default: "" }, // Optional special code for exclusive events
   attendees: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   comments: [{
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

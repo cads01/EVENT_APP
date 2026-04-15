@@ -6,7 +6,8 @@ import { getUserTimezone, COMMON_TIMEZONES } from "../utils/timeFormatting";
 export default function CreateEvent() {
   const [form, setForm] = useState({
     title: "", description: "", date: "",
-    location: "", timezone: getUserTimezone(), price: 0, capacity: 100
+    location: "", timezone: getUserTimezone(), price: 0, capacity: 100,
+    requiresModeration: false, specialCode: ""
   });
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -31,6 +32,8 @@ export default function CreateEvent() {
       formData.append("location", form.location);
       formData.append("price", form.price);
       formData.append("capacity", form.capacity);
+      formData.append("requiresModeration", form.requiresModeration);
+      formData.append("specialCode", form.specialCode);
       if (image) formData.append("image", image);
 
       await API.post("/events", formData, {
@@ -109,6 +112,31 @@ export default function CreateEvent() {
               <input type="number" className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
                 placeholder="100"
                 onChange={e => setForm({ ...form, capacity: e.target.value })} />
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <input type="checkbox" id="requiresModeration" className="mr-3"
+                checked={form.requiresModeration}
+                onChange={e => setForm({ ...form, requiresModeration: e.target.checked })} />
+              <label htmlFor="requiresModeration" className="text-sm font-medium text-gray-700">
+                Require moderation for photo posts
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 ml-6">
+              Enable for VIP events or exclusive gatherings where photo posts need admin approval before appearing in the gallery.
+            </p>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Special Access Code (Optional)</label>
+              <input className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                placeholder="e.g. VIP2026"
+                value={form.specialCode}
+                onChange={e => setForm({ ...form, specialCode: e.target.value })} />
+              <p className="text-xs text-gray-500 mt-1">
+                Attendees must enter this code to RSVP. Leave empty for public events.
+              </p>
             </div>
           </div>
 

@@ -21,6 +21,8 @@ export default function EventDetail() {
   const [showAttendees, setShowAttendees] = useState(false);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
   const [ticketStatus, setTicketStatus] = useState(null);
+  const [showSpecialCodeModal, setShowSpecialCodeModal] = useState(false);
+  const [specialCodeInput, setSpecialCodeInput] = useState("");
   const isAdmin = user?.role === "admin";
 
   const refreshEvent = () =>
@@ -37,12 +39,23 @@ export default function EventDetail() {
   const eventStarted = event ? new Date() >= new Date(event.date) : false;
   const canSharePhotos = isAttending && (eventStarted || ticketStatus === "used");
 
-  const handleRSVP = async () => {
+  const handleRSVP = async (providedCode = null) => {
     try {
       setLoading(true);
       setMessage("");
-      await API.post(`/events/${id}/rsvp`);
+
+      // Check if special code is required
+      if (event.specialCode && !providedCode) {
+        setShowSpecialCodeModal(true);
+        setLoading(false);
+        return;
+      }
+
+      const payload = providedCode ? { specialCode: providedCode } : {};
+      await API.post(`/events/${id}/rsvp`, payload);
       setMessage("success");
+      setShowSpecialCodeModal(false);
+      setSpecialCodeInput("");
       await refreshEvent();
     } catch (err) {
       setMessage(err.response?.data?.message || "RSVP failed");
@@ -161,6 +174,48 @@ export default function EventDetail() {
             </div>
             <div className="p-4 border-t text-center text-sm text-gray-500">
               {attendees?.length ?? 0} of {event.capacity} spots filled
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Special Code Modal */}
+      {showSpecialCodeModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div className="p-6">
+              <h2 className="text-lg font-bold text-gray-800 mb-2">Special Access Required</h2>
+              <p className="text-sm text-gray-600 mb-4">
+                This event requires a special access code to RSVP. Please enter the code provided by the organizer.
+              </p>
+
+              <input
+                type="text"
+                placeholder="Enter access code"
+                value={specialCodeInput}
+                onChange={e => setSpecialCodeInput(e.target.value)}
+                className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-4"
+                onKeyPress={e => e.key === 'Enter' && handleRSVP(specialCodeInput)}
+              />
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => handleRSVP(specialCodeInput)}
+                  disabled={loading || !specialCodeInput.trim()}
+                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
+                >
+                  {loading ? "Verifying..." : "Submit Code"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowSpecialCodeModal(false);
+                    setSpecialCodeInput("");
+                  }}
+                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -339,6 +394,7 @@ export default function EventDetail() {
           user={user}
           isAttending={isAttending}
           canPost={canSharePhotos}
+          requiresModeration={event.requiresModeration || false}
           onPostsChange={() => {
             API.get(`/events/${id}`).then(res => setEvent(res.data));
           }}

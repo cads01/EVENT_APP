@@ -258,12 +258,20 @@ router.delete("/:id", verifyToken, requireOrganizer, async (req, res) => {
 // ─── RSVP — generates ticket ──────────────────────────────────────────────────
 router.post("/:id/rsvp", verifyToken, async (req, res) => {
   try {
+    const { specialCode } = req.body;
     const event = await Event.findById(req.params.id);
     if (!event) return res.status(404).json({ message: "Event not found" });
     if (event.attendees.includes(req.user.id))
       return res.status(400).json({ message: "Already RSVP'd" });
     if (event.attendees.length >= event.capacity)
       return res.status(400).json({ message: "Event is at full capacity" });
+
+    // Check special code if required
+    if (event.specialCode && event.specialCode.trim()) {
+      if (!specialCode || specialCode.trim() !== event.specialCode.trim()) {
+        return res.status(403).json({ message: "Invalid or missing special access code" });
+      }
+    }
 
     event.attendees.push(req.user.id);
     await event.save();

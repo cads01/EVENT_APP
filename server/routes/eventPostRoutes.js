@@ -70,7 +70,13 @@ router.post("/:eventId/posts", verifyToken, upload.array("images", 5), async (re
       author: req.user.id,
       images: imageUrls,
       caption,
+      status: event.requiresModeration ? "pending" : "approved"
     });
+
+    // Increment event's post count only if post is auto-approved
+    if (!event.requiresModeration) {
+      await Event.findByIdAndUpdate(eventId, { $inc: { posts: 1 } });
+    }
 
     await post.populate("author", "name email");
     res.status(201).json(post);
