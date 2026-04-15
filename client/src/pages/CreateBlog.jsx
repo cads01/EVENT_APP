@@ -39,7 +39,7 @@ export default function CreateBlog() {
       formData.append("featured", form.featured);
       if (image) formData.append("image", image);
 
-      const res = await API.post("/api/blogs", formData, {
+      const res = await API.post("/blogs", formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       navigate(`/blog/${res.data._id}`);

@@ -20,7 +20,7 @@ export default function EventDonation({ eventId, user, currentDonations = 0, onD
 
     try {
       setLoading(true);
-      const res = await API.post(`/api/events/${eventId}/donate`, {
+      const res = await API.post(`/events/${eventId}/donate`, {
         amount,
         message: `Donated ₦${amount}`
       });
@@ -34,7 +34,7 @@ export default function EventDonation({ eventId, user, currentDonations = 0, onD
         callback: async () => {
           // Confirm donation
           await API.post(
-            `/api/events/${eventId}/donations/${res.data._id}/confirm`,
+            `/events/${eventId}/donations/${res.data._id}/confirm`,
             { transactionRef: `donation-${Date.now()}` }
           );
           setMessage("Thank you for donating! 🙏");

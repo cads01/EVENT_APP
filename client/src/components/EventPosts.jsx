@@ -48,7 +48,7 @@ export default function EventPosts({ eventId, user, isAttending = false, canPost
       selectedImages.forEach(img => formData.append("images", img));
       formData.append("caption", caption);
 
-      await API.post(`/api/events/${eventId}/posts`, formData, {
+      await API.post(`/events/${eventId}/posts`, formData, {
         headers: { "Content-Type": "multipart/form-data" }
       });
 
@@ -75,7 +75,7 @@ export default function EventPosts({ eventId, user, isAttending = false, canPost
     if (!reason) return;
 
     try {
-      await API.post(`/api/events/${eventId}/posts/${postId}/report`, { reason });
+      await API.post(`/events/${eventId}/posts/${postId}/report`, { reason });
       setMessage("Report submitted. Moderators will review this post.");
     } catch (err) {
       setMessage(err.response?.data?.message || "Failed to submit report");
@@ -83,7 +83,7 @@ export default function EventPosts({ eventId, user, isAttending = false, canPost
   };
 
   useEffect(() => {
-    API.get(`/api/events/${eventId}/posts`)
+    API.get(`/events/${eventId}/posts`)
       .then(res => setPosts(res.data))
       .catch(() => setPosts([]));
   }, [eventId]);

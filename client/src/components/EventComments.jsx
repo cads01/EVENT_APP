@@ -18,7 +18,7 @@ export default function EventComments({ eventId, user, comments = [] }) {
     }
     try {
       setLoading(true);
-      const res = await API.post(`/api/events/${eventId}/comment`, { text: commentText });
+      const res = await API.post(`/events/${eventId}/comment`, { text: commentText });
       setAllComments(res.data.comments);
       setCommentText("");
       setMessage("");
