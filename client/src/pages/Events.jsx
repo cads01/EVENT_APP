@@ -27,14 +27,9 @@ export default function Events() {
       .then(res => {
         setEvents(res.data);
 
-        // Calculate current and past events
-        const now = new Date();
-        const currentAndPast = res.data.filter(e => {
-          const eventDate = new Date(e.date);
-          return eventDate <= now;
-        });
-        console.log('All events:', res.data.length, 'Current & past events:', currentAndPast.length);
-        setOngoingEvents(currentAndPast);
+        // Show all events in carousel
+        console.log('All events:', res.data.length, 'Showing in carousel:', res.data.length);
+        setOngoingEvents(res.data);
       })
       .finally(() => setLoading(false));
 
@@ -137,8 +132,8 @@ export default function Events() {
         {!loading && ongoingEvents.length > 0 && (
           <div className="mb-16">
             <div className="mb-6">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">🔴 Current & Past Events</h2>
-              <p className="text-gray-600">Showing events that are happening now or already took place</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">🔴 Featured Events</h2>
+              <p className="text-gray-600">Discover upcoming and past events</p>
             </div>
             <EventCarousel events={ongoingEvents} />
           </div>
