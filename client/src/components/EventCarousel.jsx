@@ -53,32 +53,34 @@ export default function EventCarousel({ events = [] }) {
 
           {/* Content */}
           <div className="absolute bottom-0 left-0 right-0 p-8 text-white">
-            <h3 className="text-3xl font-bold mb-2">{event.title}</h3>
+            <h3 className="text-3xl font-bold mb-2">{current.title}</h3>
             <div className="flex gap-4 text-sm mb-4 flex-wrap">
               <div className="flex items-center gap-1">
                 <span>📍</span>
-                <span>{event.location}</span>
+                <span>{current.location}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span>📅</span>
-                <span>{formatEventTime(event.date, event.timezone || "UTC")}</span>
+                <span>{formatEventTime(current.date, current.timezone || "UTC")}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span>👥</span>
                 <span>
-                  {event.attendees?.length || 0} / {event.capacity}
+                  {current.attendees?.length || 0} / {current.capacity}
                 </span>
               </div>
             </div>
-            <Link
-              to={isPastEvent(event.date) ? `/events/${event._id}/summary` : `/events/${event._id}`}
-              className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition"
-            >
-              View Event →
-            </Link>
           </div>
         </div>
       ))}
+
+      {/* Single View Event button for current event */}
+      <Link
+        to={isPastEvent(current.date) ? `/events/${current._id}/summary` : `/events/${current._id}`}
+        className="absolute bottom-8 right-8 inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition z-30"
+      >
+        View Event →
+      </Link>
 
       {/* Navigation buttons */}
       <button
