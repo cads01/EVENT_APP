@@ -16,11 +16,20 @@ export default function Events() {
   const [deleting, setDeleting] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const isAdmin = user?.role === "admin";
+
+  const getEventLink = (event) =>
+    isPastEvent(event.date) ? `/events/${event._id}/summary` : `/events/${event._id}`;
   const popularOngoingEvents = events
     .filter(e => new Date(e.date) >= new Date() && e.attendees.length > 0)
     .sort((a, b) => b.attendees.length - a.attendees.length);
 
   const featuredEvent = popularOngoingEvents[0];
+
+  const popularEvents = events
+    .filter(e => e.attendees.length > 0)
+    .sort((a, b) => b.attendees.length - a.attendees.length)
+    .slice(0, 10);
 
   const eventsByLocation = {};
   events.forEach(event => {
@@ -75,11 +84,64 @@ export default function Events() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f9fafb" }}>
-      <h1>Test - Events Page</h1>
-    
+      {/* Delete confirmation modal */}
+      {deleteTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full">
+            <div className="text-4xl mb-4 text-center">🗑️</div>
+            <h2 className="text-xl font-bold text-gray-800 text-center mb-2">Delete Event?</h2>
+            <p className="text-gray-500 text-sm text-center mb-6">
+              <span className="font-semibold text-gray-700">"{deleteTarget.title}"</span> will be permanently deleted.
+              This cannot be undone.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteTarget(null)}
+                className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="flex-1 bg-red-500 text-white py-2.5 rounded-xl font-medium hover:bg-red-600 transition text-sm disabled:opacity-50"
+              >
+                {deleting ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
+      {/* Hero Banner */}
+      <div className="relative h-96 flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700">
+        <div className="text-center px-4 max-w-4xl mx-auto text-white">
+          {featuredEvent ? (
+            <>
+              <span className="inline-block bg-yellow-500/20 text-yellow-300 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                🔥 Featured Event
+              </span>
+              <h1 className="text-3xl md:text-5xl font-black mb-3">{featuredEvent.title}</h1>
+              <div className="flex flex-wrap justify-center gap-4 text-blue-100 mb-6">
+                <span>📍 {featuredEvent.location}</span>
+                <span>📅 {formatEventTimeShort(featuredEvent.date, featuredEvent.timezone || 'UTC')}</span>
+                <span>👥 {featuredEvent.attendees.length} attending</span>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className="text-4xl md:text-6xl font-black mb-4">Discover Events</h1>
+              <p className="text-lg md:text-xl mb-6">Find and attend the best events happening around you</p>
+            </>
+          )}
+          <Link to={featuredEvent ? getEventLink(featuredEvent) : "#"} 
+            className="inline-block bg-yellow-500 text-black px-6 py-3 rounded-full font-semibold hover:bg-yellow-600">
+            {featuredEvent ? "View Event" : "Explore Events"}
+          </Link>
+        </div>
+      </div>
 
-      {/* Grid */}
+      {/* Main Content */}
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "48px 24px" }}>
         {/* Ongoing Events Carousel */}
         {!loading && ongoingEvents.length > 0 && (
