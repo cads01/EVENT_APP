@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { formatEventTime } from "../utils/timeFormatting";
+import { formatEventTime, isPastEvent } from "../utils/timeFormatting";
 
 export default function EventCarousel({ events = [] }) {
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -70,7 +70,7 @@ export default function EventCarousel({ events = [] }) {
               </div>
             </div>
             <Link
-              to={`/events/${event._id}`}
+              to={isPastEvent(event.date) ? `/events/${event._id}/summary` : `/events/${event._id}`}
               className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-semibold transition"
             >
               View Event →

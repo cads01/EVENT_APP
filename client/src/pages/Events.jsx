@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { formatEventTimeShort } from "../utils/timeFormatting";
+import { formatEventTimeShort, isPastEvent } from "../utils/timeFormatting";
 import EventCarousel from "../components/EventCarousel";
 import BlogCarousel from "../components/BlogCarousel";
 
@@ -17,6 +17,9 @@ export default function Events() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
+
+  const getEventLink = (event) =>
+    isPastEvent(event.date) ? `/events/${event._id}/summary` : `/events/${event._id}`;
 
   useEffect(() => {
     // Fetch events
@@ -179,7 +182,7 @@ export default function Events() {
         }}>
           {events.map(event => (
             <div key={event._id} className="relative group">
-              <Link to={`/events/${event._id}`} style={{ textDecoration: "none", color: "inherit" }}>
+              <Link to={getEventLink(event)} style={{ textDecoration: "none", color: "inherit" }}>
                 <div style={{
                   backgroundColor: "white",
                   borderRadius: "16px",

@@ -8,7 +8,7 @@ import EventComments from "../components/EventComments";
 import EventPosts from "../components/EventPosts";
 import EventDonation from "../components/EventDonation";
 import EventInsights from "../components/EventInsights";
-import { formatEventTime, getUserTimezone } from "../utils/timeFormatting";
+import { formatEventTime, getUserTimezone, isPastEvent } from "../utils/timeFormatting";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -31,6 +31,13 @@ export default function EventDetail() {
   useEffect(() => {
     refreshEvent().catch(() => setMessage("Failed to load event."));
   }, [id]);
+
+  useEffect(() => {
+    if (!event) return;
+    if (isPastEvent(event.date)) {
+      navigate(`/events/${id}/summary`, { replace: true });
+    }
+  }, [event, id, navigate]);
 
   const isAttending = event?.attendees?.some(
     a => (a._id || a).toString() === (user?._id || user?.id)

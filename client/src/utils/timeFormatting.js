@@ -7,6 +7,21 @@ export const getUserTimezone = () => {
   return Intl.DateTimeFormat().resolvedOptions().timeZone;
 };
 
+export const isSameCalendarDay = (dateA, dateB) =>
+  dateA.getFullYear() === dateB.getFullYear() &&
+  dateA.getMonth() === dateB.getMonth() &&
+  dateA.getDate() === dateB.getDate();
+
+export const isPastEvent = (dateString) => {
+  try {
+    const eventDate = new Date(dateString);
+    const now = new Date();
+    return eventDate < now && !isSameCalendarDay(eventDate, now);
+  } catch {
+    return false;
+  }
+};
+
 export const formatEventTime = (dateString, timezone = 'UTC') => {
   try {
     const date = new Date(dateString);

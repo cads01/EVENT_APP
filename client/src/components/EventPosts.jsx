@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { API } from "../api";
 
-export default function EventPosts({ eventId, user, isAttending = false, canPost = false, requiresModeration = false, onPostsChange }) {
+export default function EventPosts({ eventId, user, isAttending = false, canPost = false, requiresModeration = false, onPostsChange, readOnly = false }) {
   const [posts, setPosts] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
@@ -106,22 +106,24 @@ export default function EventPosts({ eventId, user, isAttending = false, canPost
       )}
 
       {/* Post permission */}
-      {!user ? (
-        <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100 text-blue-700">
-          Please log in to view or share photos.
-        </div>
-      ) : !isAttending ? (
-        <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-100 text-yellow-700">
-          Only RSVP'd attendees can share picture posts. RSVP now to join the gallery.
-        </div>
-      ) : !canPost ? (
-        <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-100 text-yellow-700">
-          Check in before the event starts to share photos early.
-        </div>
-      ) : null}
+      {!readOnly && (
+        !user ? (
+          <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-100 text-blue-700">
+            Please log in to view or share photos.
+          </div>
+        ) : !isAttending ? (
+          <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-100 text-yellow-700">
+            Only RSVP'd attendees can share picture posts. RSVP now to join the gallery.
+          </div>
+        ) : !canPost ? (
+          <div className="mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-100 text-yellow-700">
+            Check in before the event starts to share photos early.
+          </div>
+        ) : null
+      )}
 
       {/* Post form */}
-      {!showForm && isAttending && (
+      {!readOnly && !showForm && isAttending && (
         <button
           onClick={() => setShowForm(true)}
           className="w-full mb-6 p-4 border-2 border-dashed border-blue-300 rounded-lg hover:bg-blue-50 transition text-blue-600 font-semibold"

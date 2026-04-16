@@ -6,6 +6,7 @@ import Events from "./pages/Events";
 import CreateEvent from "./pages/CreateEvent";
 import EditEvent from "./pages/EditEvent";
 import EventDetail from "./pages/EventDetail";
+import EventSummary from "./pages/EventSummary";
 import BlogDetail from "./pages/BlogDetail";
 import CreateBlog from "./pages/CreateBlog";
 import Trash from "./pages/Trash";
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/events/:id" element={<EventDetail />} />
+        <Route path="/events/:id/summary" element={<EventSummary />} />
         <Route path="/blog/:id" element={<BlogDetail />} />
         <Route path="/create" element={
           <ProtectedRoute roles={["admin", "organizer"]}>
