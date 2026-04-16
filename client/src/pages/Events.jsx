@@ -106,95 +106,13 @@ export default function Events() {
       )}
 
       {/* Hero Banner */}
-      <div className="relative h-screen flex items-center justify-center overflow-hidden">
-        {/* Background Image with Overlay */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{
-            backgroundImage: featuredEvent?.image
-              ? `url('${featuredEvent.image}')`
-              : "url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')",
-          }}
-        />
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-purple-900/70 to-indigo-900/80" />
-        <div className="absolute inset-0 bg-black/40" />
-
-        {/* Content */}
-        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          {featuredEvent ? (
-            <>
-              <div className="mb-6">
-                <span className="inline-block bg-yellow-500/20 text-yellow-300 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-                  🔥 Popular Event
-                </span>
-                <h1 className="text-5xl md:text-7xl font-black text-white mb-4 tracking-tight leading-tight">
-                  {featuredEvent.title}
-                </h1>
-                <div className="flex flex-wrap justify-center gap-6 text-blue-100 mb-6">
-                  <div className="flex items-center gap-2">
-                    <span>📍</span>
-                    <span>{featuredEvent.location}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>📅</span>
-                    <span>{formatEventTimeShort(featuredEvent.date, featuredEvent.timezone || 'UTC')}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>👥</span>
-                    <span>{featuredEvent.attendees.length} attending</span>
-                  </div>
-                </div>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Link
-                  to={getEventLink(featuredEvent)}
-                  className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-xl"
-                >
-                  View Event Details
-                </Link>
-                {isAdmin && (
-                  <button
-                    onClick={() => navigate("/create")}
-                    className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white/20 transition-all duration-300"
-                  >
-                    + Create Event
-                  </button>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              <h1 className="text-6xl md:text-8xl font-black text-white mb-6 tracking-tight leading-none">
-                Discover
-                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                  Amazing Events
-                </span>
-              </h1>
-              <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-2xl mx-auto leading-relaxed font-light">
-                Find and attend the best events happening around you. Connect with communities, explore new experiences, and create unforgettable memories.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-xl">
-                  Explore Events
-                </button>
-                {isAdmin && (
-                  <button
-                    onClick={() => navigate("/create")}
-                    className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white/20 transition-all duration-300"
-                  >
-                    + Create Event
-                  </button>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
-            <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse" />
-          </div>
+      <div className="relative h-96 flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700">
+        <div className="text-center px-4 max-w-4xl mx-auto text-white">
+          <h1 className="text-4xl md:text-6xl font-black mb-4">Discover Events</h1>
+          <p className="text-lg md:text-xl mb-6">Find and attend the best events happening around you</p>
+          <button className="bg-yellow-500 text-black px-6 py-3 rounded-full font-semibold hover:bg-yellow-600">
+            Explore Events
+          </button>
         </div>
       </div>
 
