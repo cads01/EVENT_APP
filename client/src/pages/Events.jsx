@@ -75,46 +75,9 @@ export default function Events() {
 
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f9fafb" }}>
-
-      {/* Delete confirmation modal */}
-      {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full">
-            <div className="text-4xl mb-4 text-center">🗑️</div>
-            <h2 className="text-xl font-bold text-gray-800 text-center mb-2">Delete Event?</h2>
-            <p className="text-gray-500 text-sm text-center mb-6">
-              <span className="font-semibold text-gray-700">"{deleteTarget.title}"</span> will be permanently deleted.
-              This cannot be undone.
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex-1 bg-red-500 text-white py-2.5 rounded-xl font-medium hover:bg-red-600 transition text-sm disabled:opacity-50"
-              >
-                {deleting ? "Deleting..." : "Yes, Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Hero Banner */}
-      <div className="relative h-96 flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700">
-        <div className="text-center px-4 max-w-4xl mx-auto text-white">
-          <h1 className="text-4xl md:text-6xl font-black mb-4">Discover Events</h1>
-          <p className="text-lg md:text-xl mb-6">Find and attend the best events happening around you</p>
-          <button className="bg-yellow-500 text-black px-6 py-3 rounded-full font-semibold hover:bg-yellow-600">
-            Explore Events
-          </button>
-        </div>
-      </div>
+      <h1>Test - Events Page</h1>
+    </div>
+  );
 
       {/* Grid */}
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "48px 24px" }}>
