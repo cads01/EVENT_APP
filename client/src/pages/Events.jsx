@@ -254,6 +254,114 @@ export default function Events() {
             </div>
           ))}
         </div>
+
+        {/* App Info Sections */}
+        <div className="mt-16">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Discover, attend, and connect at local events with our easy-to-use platform
+            </p>
+          </div>
+
+          <div className="grid gap-8 xl:grid-cols-3">
+            <div className="bg-white rounded-2xl shadow-sm p-8 text-center hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-3xl">🔍</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Discover Events</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Browse upcoming events in your area. Filter by date, location, and interests to find the perfect event for you.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm p-8 text-center hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-3xl">🎫</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">RSVP & Pay</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Securely RSVP to free events or purchase tickets. Get instant confirmation and event updates via email.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm p-8 text-center hover:shadow-lg transition-shadow">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <span className="text-3xl">📸</span>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-3">Share & Connect</h3>
+              <p className="text-gray-600 leading-relaxed">
+                Post photos, leave comments, and connect with other attendees. Build lasting memories and community.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* FAQ Section */}
+        <div className="mt-16 bg-gray-50 rounded-3xl p-8 md:p-12">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Got questions? We've got answers. Learn more about using our event platform.
+            </p>
+          </div>
+
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">How do I find events near me?</h3>
+              <p className="text-gray-600">
+                Browse our events page to see all upcoming events. You can filter by location, date, and category to find events in your area.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Is it free to attend events?</h3>
+              <p className="text-gray-600">
+                Many events are free to attend, but some require ticket purchases. Check the event details for pricing and RSVP options.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">How do I RSVP for an event?</h3>
+              <p className="text-gray-600">
+                Click on any event to view details, then use the RSVP button. Free events require just a click, paid events use secure payment processing.
+              </p>
+            </div>
+
+            <div className="bg-white rounded-xl p-6 shadow-sm">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Can I share photos from events?</h3>
+              <p className="text-gray-600">
+                Yes! After RSVPing and checking in, you can post photos during the event. Photos are moderated to ensure a positive experience.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact Section */}
+        <div className="mt-16 text-center">
+          <div className="bg-white rounded-2xl shadow-sm p-8 md:p-12 max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Get In Touch</h2>
+            <p className="text-gray-600 mb-8">
+              Have questions about events or need help with your account? Our support team is here to help.
+            </p>
+            <div className="space-y-4 text-left max-w-md mx-auto">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📧</span>
+                <div>
+                  <p className="font-semibold text-gray-900">Email Support</p>
+                  <p className="text-gray-600">support@eventapp.com</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📍</span>
+                <div>
+                  <p className="font-semibold text-gray-900">Location</p>
+                  <p className="text-gray-600">Lagos, Nigeria</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
