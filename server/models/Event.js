@@ -23,6 +23,10 @@ const eventSchema = new mongoose.Schema({
     text: { type: String },
     createdAt: { type: Date, default: Date.now }
   }],
+  faq: [{
+    question: { type: String, default: "" },
+    answer: { type: String, default: "" }
+  }],
   posts: { type: Number, default: 0 }, // Count of picture posts
   donations: { type: Number, default: 0 }, // Total donations
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },

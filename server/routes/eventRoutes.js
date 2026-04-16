@@ -23,14 +23,27 @@ const uploadToCloudinary = (buffer) => {
   });
 };
 
+const parseFaq = (faqData) => {
+  if (!faqData) return undefined;
+  if (typeof faqData === "string") {
+    try {
+      return JSON.parse(faqData);
+    } catch {
+      return undefined;
+    }
+  }
+  return faqData;
+};
+
 // ─── Create event (admin or organizer) ───────────────────────────────────────
 router.post("/", verifyToken, requireOrganizer, upload.single("image"), async (req, res) => {
   try {
     let imageUrl = "";
     if (req.file) imageUrl = await uploadToCloudinary(req.file.buffer);
-    const event = await Event.create({
-      ...req.body, createdBy: req.user.id, image: imageUrl,
-    });
+    const faq = parseFaq(req.body.faq);
+    const eventData = { ...req.body, createdBy: req.user.id, image: imageUrl };
+    if (faq) eventData.faq = faq;
+    const event = await Event.create(eventData);
     res.status(201).json(event);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -227,7 +240,9 @@ router.put("/:id", verifyToken, requireOrganizer, upload.single("image"), async 
     if (!event) return res.status(404).json({ message: "Event not found" });
     if (req.user.role === "organizer" && event.createdBy.toString() !== req.user.id)
       return res.status(403).json({ message: "Not your event" });
+    const faq = parseFaq(req.body.faq);
     const updateData = { ...req.body };
+    if (faq) updateData.faq = faq;
     if (req.file) updateData.image = await uploadToCloudinary(req.file.buffer);
     const updated = await Event.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.json(updated);

@@ -9,7 +9,8 @@ export default function EditEvent() {
   const [form, setForm] = useState({
     title: "", description: "", date: "",
     location: "", timezone: getUserTimezone(), price: 0, capacity: 100,
-    requiresModeration: false, specialCode: ""
+    requiresModeration: false, specialCode: "",
+    faq: [{ question: "", answer: "" }]
   });
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -30,7 +31,8 @@ export default function EditEvent() {
           price: e.price,
           capacity: e.capacity,
           requiresModeration: e.requiresModeration || false,
-          specialCode: e.specialCode || ""
+          specialCode: e.specialCode || "",
+          faq: e.faq?.length ? e.faq : [{ question: "", answer: "" }]
         });
         if (e.image) setPreview(e.image);
       })
@@ -58,6 +60,8 @@ export default function EditEvent() {
       formData.append("capacity", form.capacity);
       formData.append("requiresModeration", form.requiresModeration);
       formData.append("specialCode", form.specialCode);
+      const faqItems = form.faq.filter(item => item.question.trim() || item.answer.trim());
+      formData.append("faq", JSON.stringify(faqItems));
       if (image) formData.append("image", image);
 
       await API.put(`/events/${id}`, formData, {
@@ -196,6 +200,64 @@ export default function EditEvent() {
               <p className="text-xs text-gray-500 mt-1">
                 Attendees must enter this code to RSVP. Leave empty for public events.
               </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Event FAQ</label>
+              <div className="space-y-4 mb-4">
+                {form.faq.map((item, idx) => (
+                  <div key={idx} className="space-y-3 p-4 rounded-xl border border-gray-200">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-semibold text-gray-800">FAQ {idx + 1}</p>
+                      <button
+                        type="button"
+                        onClick={() => setForm(prev => ({
+                          ...prev,
+                          faq: prev.faq.filter((_, i) => i !== idx)
+                        }))}
+                        className="text-sm text-red-500 hover:text-red-700"
+                        disabled={form.faq.length === 1}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
+                      <input
+                        type="text"
+                        value={item.question}
+                        onChange={e => setForm(prev => ({
+                          ...prev,
+                          faq: prev.faq.map((faqItem, i) => i === idx ? { ...faqItem, question: e.target.value } : faqItem)
+                        }))}
+                        className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Answer</label>
+                      <textarea
+                        value={item.answer}
+                        onChange={e => setForm(prev => ({
+                          ...prev,
+                          faq: prev.faq.map((faqItem, i) => i === idx ? { ...faqItem, answer: e.target.value } : faqItem)
+                        }))}
+                        rows={3}
+                        className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={() => setForm(prev => ({
+                  ...prev,
+                  faq: [...prev.faq, { question: "", answer: "" }]
+                }))}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
+              >
+                + Add FAQ item
+              </button>
             </div>
           </div>
 
