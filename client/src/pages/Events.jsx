@@ -16,19 +16,29 @@ export default function Events() {
   const [deleting, setDeleting] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const isAdmin = user?.role === "admin";
+  const popularOngoingEvents = events
+    .filter(e => new Date(e.date) >= new Date() && e.attendees.length > 0)
+    .sort((a, b) => b.attendees.length - a.attendees.length);
 
-  const getEventLink = (event) =>
-    isPastEvent(event.date) ? `/events/${event._id}/summary` : `/events/${event._id}`;
+  const featuredEvent = popularOngoingEvents[0];
+
+  const eventsByLocation = {};
+  events.forEach(event => {
+    const loc = event.location || 'Other';
+    if (!eventsByLocation[loc]) eventsByLocation[loc] = [];
+    eventsByLocation[loc].push(event);
+  });
+
+  const freeEvents = events.filter(e => e.price === 0);
+  const paidEvents = events.filter(e => e.price > 0);
+  const upcomingEvents = events.filter(e => new Date(e.date) > new Date());
+  const pastEvents = events.filter(e => new Date(e.date) <= new Date());
 
   useEffect(() => {
     // Fetch events
     API.get("/events")
       .then(res => {
         setEvents(res.data);
-
-        // Show all events in carousel
-        console.log('All events:', res.data.length, 'Showing in carousel:', res.data.length);
         setOngoingEvents(res.data);
       })
       .finally(() => setLoading(false));
@@ -95,35 +105,97 @@ export default function Events() {
         </div>
       )}
 
-      {/* Hero */}
-      <div style={{
-        background: "linear-gradient(135deg, #2563eb, #4f46e5)",
-        padding: "80px 24px",
-        textAlign: "center",
-        color: "white"
-      }}>
-        <h1 style={{ fontSize: "48px", fontWeight: 800, marginBottom: "16px", color: "white" }}>
-          Discover Events
-        </h1>
-        <p style={{ fontSize: "18px", color: "#bfdbfe", maxWidth: "500px", margin: "0 auto 24px" }}>
-          Find and attend the best events happening around you
-        </p>
-        {isAdmin && (
-          <div style={{ display: "flex", gap: "12px", justifyContent: "center" }}>
-            <button
-              onClick={() => navigate("/create")}
-              className="inline-flex items-center gap-2 bg-white text-blue-600 font-bold px-6 py-3 rounded-xl hover:bg-blue-50 transition text-sm"
-            >
-              + Create New Event
-            </button>
-            <button
-              onClick={() => navigate("/trash")}
-              className="inline-flex items-center gap-2 bg-white text-gray-700 font-bold px-6 py-3 rounded-xl hover:bg-gray-100 transition text-sm"
-            >
-              🗑️ Trash
-            </button>
+      {/* Hero Banner */}
+      <div className="relative h-screen flex items-center justify-center overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: featuredEvent?.image
+              ? `url('${featuredEvent.image}')`
+              : "url('https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=2070&q=80')",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-purple-900/70 to-indigo-900/80" />
+        <div className="absolute inset-0 bg-black/40" />
+
+        {/* Content */}
+        <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
+          {featuredEvent ? (
+            <>
+              <div className="mb-6">
+                <span className="inline-block bg-yellow-500/20 text-yellow-300 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                  🔥 Popular Event
+                </span>
+                <h1 className="text-5xl md:text-7xl font-black text-white mb-4 tracking-tight leading-tight">
+                  {featuredEvent.title}
+                </h1>
+                <div className="flex flex-wrap justify-center gap-6 text-blue-100 mb-6">
+                  <div className="flex items-center gap-2">
+                    <span>📍</span>
+                    <span>{featuredEvent.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>📅</span>
+                    <span>{formatEventTimeShort(featuredEvent.date, featuredEvent.timezone || 'UTC')}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span>👥</span>
+                    <span>{featuredEvent.attendees.length} attending</span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <Link
+                  to={getEventLink(featuredEvent)}
+                  className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-xl"
+                >
+                  View Event Details
+                </Link>
+                {isAdmin && (
+                  <button
+                    onClick={() => navigate("/create")}
+                    className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white/20 transition-all duration-300"
+                  >
+                    + Create Event
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 className="text-6xl md:text-8xl font-black text-white mb-6 tracking-tight leading-none">
+                Discover
+                <span className="block text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+                  Amazing Events
+                </span>
+              </h1>
+              <p className="text-xl md:text-2xl text-blue-100 mb-8 max-w-2xl mx-auto leading-relaxed font-light">
+                Find and attend the best events happening around you. Connect with communities, explore new experiences, and create unforgettable memories.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:from-yellow-600 hover:to-orange-600 transition-all duration-300 transform hover:scale-105 shadow-xl">
+                  Explore Events
+                </button>
+                {isAdmin && (
+                  <button
+                    onClick={() => navigate("/create")}
+                    className="bg-white/10 backdrop-blur-sm border border-white/20 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white/20 transition-all duration-300"
+                  >
+                    + Create Event
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Scroll Indicator */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+          <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+            <div className="w-1 h-3 bg-white/50 rounded-full mt-2 animate-pulse" />
           </div>
-        )}
+        </div>
       </div>
 
       {/* Grid */}
@@ -150,109 +222,81 @@ export default function Events() {
           </div>
         )}
 
-        {/* All Events Section */}
-        <div className="mb-6">
-          <h2 className="text-3xl font-bold text-gray-900">All Events</h2>
-        </div>
-        {loading && (
-          <p style={{ textAlign: "center", color: "#6b7280", padding: "80px 0" }}>Loading events...</p>
-        )}
-        {!loading && events.length === 0 && (
-          <div style={{ textAlign: "center", padding: "80px 0" }}>
-            <p style={{ fontSize: "48px" }}>🎟</p>
-            <p style={{ fontSize: "20px", color: "#374151", fontWeight: 600, marginTop: "16px" }}>No events yet</p>
-            {isAdmin && (
-              <button onClick={() => navigate("/create")}
-                className="mt-4 bg-blue-600 text-white px-6 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition">
-                Create your first event
-              </button>
-            )}
-           
+        {/* Popular Events */}
+        {popularEvents.length > 0 && (
+          <div className="mb-16">
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">🔥 Popular Events</h2>
+              <p className="text-gray-600">Most attended events by the community</p>
+            </div>
+            <EventCarousel events={popularEvents} />
           </div>
         )}
 
-        <div style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))",
-          gap: "32px"
-        }}>
-          {events.map(event => (
-            <div key={event._id} className="relative group">
-              <Link to={getEventLink(event)} style={{ textDecoration: "none", color: "inherit" }}>
-                <div style={{
-                  backgroundColor: "white",
-                  borderRadius: "16px",
-                  boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-                  overflow: "hidden",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                  cursor: "pointer"
-                }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.transform = "translateY(-4px)";
-                    e.currentTarget.style.boxShadow = "0 8px 24px rgba(0,0,0,0.12)";
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "0 2px 12px rgba(0,0,0,0.08)";
-                  }}>
+        {/* Events by Location */}
+        {Object.keys(eventsByLocation).length > 0 && (
+          <div className="mb-16">
+            <div className="mb-6">
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">📍 Events by Location</h2>
+              <p className="text-gray-600">Find events happening near you</p>
+            </div>
+            <div className="space-y-12">
+              {Object.entries(eventsByLocation).slice(0, 3).map(([location, locEvents]) => (
+                <div key={location}>
+                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Events in {location}</h3>
+                  <EventCarousel events={locEvents} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Event Categories */}
+        <div className="mb-16">
+          <div className="mb-6">
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">🏷️ Event Categories</h2>
+            <p className="text-gray-600">Browse events by type and availability</p>
+          </div>
+
+          {/* Category Tabs */}
+          <div className="flex flex-wrap gap-2 mb-8">
+            <button className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-200 transition">
+              Free Events ({freeEvents.length})
+            </button>
+            <button className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium hover:bg-green-200 transition">
+              Paid Events ({paidEvents.length})
+            </button>
+            <button className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium hover:bg-purple-200 transition">
+              Upcoming ({upcomingEvents.length})
+            </button>
+            <button className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium hover:bg-orange-200 transition">
+              Past Events ({pastEvents.length})
+            </button>
+          </div>
+
+          {/* Category Grids - Show Free Events by default */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {freeEvents.slice(0, 6).map(event => (
+              <div key={event._id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
+                <Link to={getEventLink(event)} className="block">
                   {event.image ? (
-                    <img src={event.image} alt={event.title}
-                      style={{ width: "100%", height: "200px", objectFit: "cover" }} />
+                    <img src={event.image} alt={event.title} className="w-full h-48 object-cover" />
                   ) : (
-                    <div style={{
-                      width: "100%", height: "200px",
-                      background: "linear-gradient(135deg, #dbeafe, #e0e7ff)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: "48px"
-                    }}>🎟</div>
+                    <div className="w-full h-48 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-4xl">🎟</div>
                   )}
-                  <div style={{ padding: "20px" }}>
-                    <h2 style={{ fontSize: "18px", fontWeight: 700, color: "#111827", marginBottom: "8px" }}>
-                      {event.title}
-                    </h2>
-                    <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "4px" }}>
-                      📍 {event.location}
-                    </p>
-                    <p style={{ fontSize: "14px", color: "#9ca3af", marginBottom: "4px" }}>
-                      📅 {formatEventTimeShort(event.date, event.timezone || 'UTC')}
-                    </p>
-                    <p style={{ fontSize: "12px", color: "#d1d5db", marginBottom: "16px" }}>
-                      🌍 {event.timezone || 'UTC'}
-                    </p>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{
-                        fontSize: "18px", fontWeight: 700,
-                        color: event.price === 0 ? "#16a34a" : "#2563eb"
-                      }}>
-                        {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
-                      </span>
-                      <span style={{ fontSize: "13px", color: "#9ca3af" }}>
-                        {event.attendees.length} attending
-                      </span>
+                  <div className="p-4">
+                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
+                    <p className="text-sm text-gray-600 mb-2">📍 {event.location}</p>
+                    <p className="text-sm text-gray-500">{formatEventTimeShort(event.date, event.timezone || 'UTC')}</p>
+                    <div className="mt-3 flex justify-between items-center">
+                      <span className="text-green-600 font-semibold">Free</span>
+                      <span className="text-sm text-gray-500">{event.attendees.length} attending</span>
                     </div>
                   </div>
-                </div>
-              </Link>
-
-              {/* Admin action buttons — float over card */}
-              {isAdmin && (
-                <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <button
-                    onClick={(e) => { e.preventDefault(); navigate(`/events/${event._id}/edit`); }}
-                    className="bg-white text-blue-600 border border-blue-100 px-3 py-1.5 rounded-lg text-xs font-semibold shadow hover:bg-blue-50 transition"
-                  >
-                    ✏️ Edit
-                  </button>
-                  <button
-                    onClick={(e) => { e.preventDefault(); setDeleteTarget(event); }}
-                    className="bg-white text-red-500 border border-red-100 px-3 py-1.5 rounded-lg text-xs font-semibold shadow hover:bg-red-50 transition"
-                  >
-                    🗑️ Delete
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
+                </Link>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* App Info Sections */}
