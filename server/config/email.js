@@ -8,7 +8,7 @@ export const sendRSVPConfirmation = async ({ to, name, eventTitle, eventDate, ev
   const resend = getResend();
   await resend.emails.send({
     from: "EventApp <onboarding@resend.dev>",
-    to: "adedolapo.adeniyi246@yahoo.com", // your yahoo email here
+    to: to, // your yahoo email here
     subject: `RSVP Confirmed: ${eventTitle}`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
