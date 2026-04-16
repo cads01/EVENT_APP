@@ -4,11 +4,6 @@ import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
 import Countdown from "../components/Countdown";
 import GetDirections from "../components/GetDirections";
-import EventComments from "../components/EventComments";
-import EventPosts from "../components/EventPosts";
-import EventDonation from "../components/EventDonation";
-import EventInsights from "../components/EventInsights";
-import { formatEventTime, getUserTimezone, isPastEvent } from "../utils/timeFormatting";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -20,70 +15,34 @@ export default function EventDetail() {
   const [attendees, setAttendees] = useState(null);
   const [showAttendees, setShowAttendees] = useState(false);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
-  const [ticketStatus, setTicketStatus] = useState(null);
-  const [showSpecialCodeModal, setShowSpecialCodeModal] = useState(false);
-  const [specialCodeInput, setSpecialCodeInput] = useState("");
-  const [deleting, setDeleting] = useState(false);
   const isAdmin = user?.role === "admin";
 
-  const refreshEvent = () =>
-    API.get(`/events/${id}`).then(res => setEvent(res.data));
+  const refresh = () => API.get(`/events/${id}`).then(res => setEvent(res.data));
 
-  useEffect(() => {
-    refreshEvent().catch(() => setMessage("Failed to load event."));
-  }, [id]);
-
-  useEffect(() => {
-    if (!event) return;
-    if (isPastEvent(event.date)) {
-      navigate(`/events/${id}/summary`, { replace: true });
-    }
-  }, [event, id, navigate]);
+  useEffect(() => { refresh().catch(() => setMessage("Failed to load event.")); }, [id]);
 
   const isAttending = event?.attendees?.some(
     a => (a._id || a).toString() === (user?._id || user?.id)
   );
 
-  const eventStarted = event ? new Date() >= new Date(event.date) : false;
-  const canSharePhotos = isAttending && (eventStarted || ticketStatus === "used");
-
-  const handleRSVP = async (providedCode = null) => {
+  const handleRSVP = async () => {
     try {
-      setLoading(true);
-      setMessage("");
-
-      // Check if special code is required
-      if (event.specialCode && !providedCode) {
-        setShowSpecialCodeModal(true);
-        setLoading(false);
-        return;
-      }
-
-      const payload = providedCode ? { specialCode: providedCode } : {};
-      await API.post(`/events/${id}/rsvp`, payload);
+      setLoading(true); setMessage("");
+      await API.post(`/events/${id}/rsvp`);
       setMessage("success");
-      setShowSpecialCodeModal(false);
-      setSpecialCodeInput("");
-      await refreshEvent();
-    } catch (err) {
-      setMessage(err.response?.data?.message || "RSVP failed");
-    } finally {
-      setLoading(false);
-    }
+      await refresh();
+    } catch (err) { setMessage(err.response?.data?.message || "RSVP failed"); }
+    finally { setLoading(false); }
   };
 
   const handleCancelRSVP = async () => {
     try {
-      setLoading(true);
-      setMessage("");
+      setLoading(true); setMessage("");
       await API.delete(`/events/${id}/rsvp`);
       setMessage("cancelled_rsvp");
-      await refreshEvent();
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Failed to cancel RSVP");
-    } finally {
-      setLoading(false);
-    }
+      await refresh();
+    } catch (err) { setMessage(err.response?.data?.message || "Failed to cancel"); }
+    finally { setLoading(false); }
   };
 
   const handlePayment = () => {
@@ -99,211 +58,134 @@ export default function EventDetail() {
   };
 
   const loadAttendees = async () => {
-    setLoadingAttendees(true);
-    setShowAttendees(true);
+    setLoadingAttendees(true); setShowAttendees(true);
     try {
       const res = await API.get(`/events/${id}/attendees`);
       setAttendees(res.data.attendees);
-    } catch {
-      setAttendees([]);
-    } finally {
-      setLoadingAttendees(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!user || !isAttending) return;
-    API.get(`/events/${id}/ticket`)
-      .then(res => setTicketStatus(res.data.status))
-      .catch(() => setTicketStatus(null));
-  }, [id, user, isAttending]);
-
-  const handleCheckIn = async () => {
-    try {
-      setLoading(true);
-      setMessage("");
-      await API.post(`/events/${id}/checkin`);
-      setTicketStatus("used");
-      setMessage("Checked in successfully. You can now share photos before the event starts.");
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Check-in failed");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteEvent = async () => {
-    const confirmed = window.confirm("Are you sure you want to delete this event? This action cannot be undone.");
-    if (!confirmed) return;
-
-    try {
-      setDeleting(true);
-      await API.delete(`/events/${id}`);
-      navigate("/");
-    } catch (err) {
-      setMessage(err.response?.data?.message || "Failed to delete event.");
-    } finally {
-      setDeleting(false);
-    }
+    } catch { setAttendees([]); }
+    finally { setLoadingAttendees(false); }
   };
 
   if (!event) return (
-    <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
-      <div className="text-center">
-        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-gray-500">Loading event...</p>
-      </div>
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="w-10 h-10 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
     </div>
   );
 
+  const fillPct = Math.min((event.attendees.length / event.capacity) * 100, 100);
+
   return (
-    <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
+    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
 
       {/* Attendees modal */}
       {showAttendees && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
-            <div className="flex items-center justify-between p-6 border-b">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">
+            <div className="flex items-center justify-between p-6 border-b border-zinc-800">
               <div>
-                <h2 className="text-lg font-bold text-gray-800">Attendees</h2>
-                <p className="text-sm text-gray-500">{event.title}</p>
+                <h2 className="font-black text-white">Attendees</h2>
+                <p className="text-zinc-500 text-xs">{event.title}</p>
               </div>
               <button onClick={() => setShowAttendees(false)}
-                className="text-gray-400 hover:text-gray-600 text-2xl leading-none">×</button>
+                className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white transition-all">×</button>
             </div>
             <div className="overflow-y-auto flex-1 p-4">
               {loadingAttendees ? (
-                <div className="flex justify-center py-8">
-                  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                <div className="flex justify-center py-10">
+                  <div className="w-8 h-8 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
                 </div>
               ) : attendees?.length === 0 ? (
-                <p className="text-center text-gray-400 py-8">No attendees yet</p>
+                <p className="text-center text-zinc-600 py-8 text-xs tracking-widest uppercase">No attendees yet</p>
               ) : (
-                <ul className="space-y-3">
+                <ul className="space-y-2">
                   {attendees?.map((a, i) => (
-                    <li key={a._id} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                      <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                    <li key={a._id} className="flex items-center gap-3 p-3 bg-zinc-800/50 rounded-xl">
+                      <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-zinc-950 font-black text-sm flex-shrink-0">
                         {a.name?.[0]?.toUpperCase()}
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-gray-800 text-sm truncate">{a.name}</p>
-                        <p className="text-xs text-gray-400 truncate">{a.email}</p>
+                        <p className="font-bold text-white text-sm truncate">{a.name}</p>
+                        <p className="text-zinc-500 text-xs truncate">{a.email}</p>
                       </div>
-                      <span className="ml-auto text-xs text-gray-300 flex-shrink-0">#{i + 1}</span>
+                      {a.ticketCode && (
+                        <span className="ml-auto font-mono text-[10px] text-amber-400 bg-amber-400/10 border border-amber-400/20 px-2 py-0.5 rounded-lg flex-shrink-0">
+                          {a.ticketCode}
+                        </span>
+                      )}
                     </li>
                   ))}
                 </ul>
               )}
             </div>
-            <div className="p-4 border-t text-center text-sm text-gray-500">
-              {attendees?.length ?? 0} of {event.capacity} spots filled
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Special Code Modal */}
-      {showSpecialCodeModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md">
-            <div className="p-6">
-              <h2 className="text-lg font-bold text-gray-800 mb-2">Special Access Required</h2>
-              <p className="text-sm text-gray-600 mb-4">
-                This event requires a special access code to RSVP. Please enter the code provided by the organizer.
-              </p>
-
-              <input
-                type="text"
-                placeholder="Enter access code"
-                value={specialCodeInput}
-                onChange={e => setSpecialCodeInput(e.target.value)}
-                className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm mb-4"
-                onKeyPress={e => e.key === 'Enter' && handleRSVP(specialCodeInput)}
-              />
-
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handleRSVP(specialCodeInput)}
-                  disabled={loading || !specialCodeInput.trim()}
-                  className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition disabled:opacity-50"
-                >
-                  {loading ? "Verifying..." : "Submit Code"}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowSpecialCodeModal(false);
-                    setSpecialCodeInput("");
-                  }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                >
-                  Cancel
-                </button>
-              </div>
+            <div className="p-4 border-t border-zinc-800 text-center">
+              <p className="text-xs text-zinc-600">{attendees?.length ?? 0} of {event.capacity} spots filled</p>
             </div>
           </div>
         </div>
       )}
 
       {/* Hero */}
-      <div className="w-full h-72 md:h-96 bg-gradient-to-br from-blue-600 to-indigo-700 relative overflow-hidden">
+      <div className="relative h-72 md:h-[420px] overflow-hidden">
         {event.image ? (
           <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-8xl">🎟</div>
+          <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-8xl">🎟</div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-        <div className="absolute bottom-6 left-6">
-          <span className={`px-3 py-1 rounded-full text-sm font-semibold ${event.price === 0 ? "bg-green-500 text-white" : "bg-blue-500 text-white"}`}>
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
+
+        {/* Badges */}
+        <div className="absolute bottom-6 left-6 flex items-center gap-2">
+          <span className={`text-xs font-black px-3 py-1.5 rounded-full border ${event.price === 0 ? "bg-emerald-400/20 text-emerald-400 border-emerald-400/30" : "bg-amber-400/20 text-amber-400 border-amber-400/30"}`}>
             {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
           </span>
         </div>
+
+        {/* Admin actions */}
         {isAdmin && (
           <div className="absolute top-4 right-4 flex gap-2">
             <button onClick={() => navigate(`/events/${id}/edit`)}
-              className="bg-white/90 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white transition">
+              className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:border-amber-400/50 hover:text-amber-400 transition-all">
               ✏️ Edit
             </button>
-            <button onClick={handleDeleteEvent}
-              disabled={deleting}
-              className="bg-white/90 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white transition disabled:opacity-50">
-              {deleting ? "Deleting…" : "Delete"}
-            </button>
             <button onClick={loadAttendees}
-              className="bg-white/90 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white transition">
-              👥 Attendees ({event.attendees.length})
+              className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:border-sky-400/50 hover:text-sky-400 transition-all">
+              👥 {event.attendees.length}
             </button>
           </div>
         )}
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-10">
-        <div className="bg-white rounded-2xl shadow-sm p-8 mb-6">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-6">{event.title}</h1>
+      {/* Content */}
+      <div className="max-w-4xl mx-auto px-5 py-10">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-4">
+          <h1 className="text-4xl font-black mb-8 leading-tight">{event.title}</h1>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <p className="text-2xl mb-1">📍</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Location</p>
-              <p className="text-gray-800 font-semibold mt-1">{event.location}</p>
-            </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
-              <p className="text-2xl mb-1">📅</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Date & Time</p>
-              <p className="text-gray-800 font-semibold mt-1 text-sm">{formatEventTime(event.date, event.timezone || 'UTC')}</p>
-              <p className="text-xs text-gray-500 mt-2">Your time: {formatEventTime(event.date, getUserTimezone())}</p>
-            </div>
-            <div onClick={isAdmin ? loadAttendees : undefined}
-              className={`rounded-xl p-4 text-center ${isAdmin ? "bg-blue-50 hover:bg-blue-100 cursor-pointer" : "bg-gray-50"} transition`}>
+          {/* Info cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+            {[
+              { icon: "📍", label: "Location", value: event.location },
+              { icon: "📅", label: "Date",     value: new Date(event.date).toDateString() },
+            ].map(item => (
+              <div key={item.label} className="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-4 text-center">
+                <p className="text-2xl mb-1">{item.icon}</p>
+                <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-1">{item.label}</p>
+                <p className="text-white font-bold text-sm">{item.value}</p>
+              </div>
+            ))}
+            <div
+              onClick={isAdmin ? loadAttendees : undefined}
+              className={`bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-4 text-center ${isAdmin ? "cursor-pointer hover:border-amber-400/30 transition-all" : ""}`}>
               <p className="text-2xl mb-1">👥</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Attending</p>
-              <p className="text-gray-800 font-semibold mt-1">{event.attendees.length} / {event.capacity}</p>
-              {isAdmin && <p className="text-[10px] text-blue-400 mt-0.5">click to view list</p>}
+              <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-1">Attending</p>
+              <p className="text-white font-bold text-sm">{event.attendees.length} / {event.capacity}</p>
+              {isAdmin && <p className="text-[10px] text-amber-400 mt-1">Click to view</p>}
             </div>
           </div>
 
-          <div className="border-t pt-6 mb-8">
-            <h2 className="text-lg font-bold text-gray-800 mb-3">About this event</h2>
-            <p className="text-gray-600 leading-relaxed whitespace-pre-line">{event.description}</p>
+          {/* Description */}
+          <div className="border-t border-zinc-800 pt-6 mb-8">
+            <h2 className="font-black text-white mb-3 text-lg">About</h2>
+            <p className="text-zinc-400 leading-relaxed whitespace-pre-line text-sm">{event.description}</p>
             <div className="mt-6 space-y-4">
               <Countdown eventDate={event.date} />
               <GetDirections venue={event.venue} location={event.location} />
@@ -312,128 +194,86 @@ export default function EventDetail() {
 
           {/* Capacity bar */}
           <div className="mb-8">
-            <div className="flex justify-between text-sm text-gray-500 mb-2">
-              <span>Spots filled</span>
-              <span>{Math.round((event.attendees.length / event.capacity) * 100)}%</span>
+            <div className="flex justify-between text-xs text-zinc-500 mb-2">
+              <span>Capacity</span>
+              <span>{Math.round(fillPct)}% filled</span>
             </div>
-            <div className="w-full bg-gray-100 rounded-full h-2">
-              <div className="bg-blue-600 h-2 rounded-full transition-all"
-                style={{ width: `${Math.min((event.attendees.length / event.capacity) * 100, 100)}%` }} />
+            <div className="w-full bg-zinc-800 rounded-full h-2">
+              <div className="h-2 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all"
+                style={{ width: `${fillPct}%` }} />
             </div>
           </div>
 
           {/* Messages */}
           {message === "success" && (
-            <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl mb-6 text-sm font-medium">
-              🎉 RSVP confirmed! Check your email.
+            <div className="bg-emerald-400/10 border border-emerald-400/25 text-emerald-400 px-4 py-3 rounded-xl mb-6 text-sm font-bold">
+              🎉 RSVP confirmed! Check your email for your ticket.
             </div>
           )}
           {message === "cancelled_rsvp" && (
-            <div className="bg-gray-50 border border-gray-200 text-gray-600 px-4 py-3 rounded-xl mb-6 text-sm">
+            <div className="bg-zinc-800 border border-zinc-700 text-zinc-400 px-4 py-3 rounded-xl mb-6 text-sm">
               Your RSVP has been cancelled.
             </div>
           )}
           {message === "cancelled" && (
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-xl mb-6 text-sm">
+            <div className="bg-amber-400/10 border border-amber-400/25 text-amber-400 px-4 py-3 rounded-xl mb-6 text-sm">
               Payment was cancelled.
             </div>
           )}
           {message && !["success", "cancelled_rsvp", "cancelled"].includes(message) && (
-            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 text-sm">
+            <div className="bg-red-500/10 border border-red-500/25 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">
               {message}
             </div>
           )}
 
-          {/* Action buttons */}
+          {/* CTA */}
           {user ? (
-            <div className="flex gap-3">
-              {isAttending ? (
-                <button onClick={handleCancelRSVP} disabled={loading}
-                  className="flex-1 border-2 border-red-200 text-red-500 py-4 rounded-xl font-bold text-base hover:bg-red-50 transition disabled:opacity-50">
-                  {loading ? "Cancelling..." : "Cancel My RSVP"}
-                </button>
-              ) : event.price > 0 ? (
-                <button onClick={handlePayment} disabled={loading}
-                  className="flex-1 bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition disabled:opacity-50">
-                  {loading ? "Processing..." : `Pay ₦${event.price.toLocaleString()} & RSVP`}
-                </button>
-              ) : (
-                <button onClick={handleRSVP} disabled={loading}
-                  className="flex-1 bg-blue-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition disabled:opacity-50">
-                  {loading ? "Processing..." : "RSVP Now — It's Free!"}
-                </button>
-              )}
-        
-            {isAttending && !canSharePhotos && (
-              <div className="mt-4 p-4 rounded-xl border border-yellow-200 bg-yellow-50 text-yellow-700 text-sm">
-                Check in before the event starts to post pictures early.
-                <button
-                  onClick={handleCheckIn}
-                  disabled={loading}
-                  className="mt-3 w-full inline-flex justify-center items-center rounded-lg bg-yellow-500 px-4 py-2 text-white font-semibold hover:bg-yellow-600 transition disabled:opacity-50"
-                >
-                  {loading ? "Checking in..." : "Check in now"}
-                </button>
-              </div>
-            )}
-          </div>
+            isAttending ? (
+              <button onClick={handleCancelRSVP} disabled={loading}
+                className="w-full border-2 border-red-500/30 text-red-400 py-4 rounded-2xl font-black text-base hover:bg-red-500/5 transition-all disabled:opacity-40">
+                {loading ? "Cancelling…" : "Cancel My RSVP"}
+              </button>
+            ) : event.price > 0 ? (
+              <button onClick={handlePayment} disabled={loading}
+                className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-zinc-950 py-4 rounded-2xl font-black text-base hover:from-amber-300 hover:to-orange-300 transition-all disabled:opacity-40 shadow-lg shadow-amber-500/20">
+                {loading ? "Processing…" : `Pay ₦${event.price.toLocaleString()} & RSVP`}
+              </button>
+            ) : (
+              <button onClick={handleRSVP} disabled={loading}
+                className="w-full bg-gradient-to-r from-amber-400 to-orange-400 text-zinc-950 py-4 rounded-2xl font-black text-base hover:from-amber-300 hover:to-orange-300 transition-all disabled:opacity-40 shadow-lg shadow-amber-500/20">
+                {loading ? "Processing…" : "RSVP Now — It's Free!"}
+              </button>
+            )
           ) : (
-            <div className="bg-blue-50 border border-blue-100 rounded-xl p-6 text-center">
-              <p className="text-gray-600 mb-4">You need to be logged in to RSVP</p>
+            <div className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-6 text-center">
+              <p className="text-zinc-400 mb-4 text-sm">Sign in to RSVP for this event</p>
               <div className="flex gap-3 justify-center">
-                <Link to="/login" className="bg-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:bg-blue-700 transition">Login</Link>
-                <Link to="/register" className="border border-blue-600 text-blue-600 px-6 py-2 rounded-lg font-medium hover:bg-blue-50 transition">Register</Link>
+                <Link to="/login" className="bg-amber-400 text-zinc-950 px-6 py-2.5 rounded-xl font-black text-sm hover:bg-amber-300 transition-all">
+                  Login
+                </Link>
+                <Link to="/register" className="border border-zinc-700 text-zinc-400 px-6 py-2.5 rounded-xl font-bold text-sm hover:border-zinc-500 hover:text-white transition-all">
+                  Register
+                </Link>
               </div>
             </div>
           )}
         </div>
 
+        {/* Organizer */}
         {event.createdBy && (
-          <div className="bg-white rounded-2xl shadow-sm p-6 mb-8">
-            <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide mb-3">Organizer</h2>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+            <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-4">Organizer</p>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-zinc-950 font-black">
                 {event.createdBy.name?.[0]?.toUpperCase()}
               </div>
               <div>
-                <p className="font-semibold text-gray-800">{event.createdBy.name}</p>
-                <p className="text-sm text-gray-500">{event.createdBy.email}</p>
+                <p className="font-bold text-white">{event.createdBy.name}</p>
+                <p className="text-zinc-500 text-xs">{event.createdBy.email}</p>
               </div>
             </div>
           </div>
         )}
-
-        {/* Event Insights */}
-        <EventInsights event={event} />
-
-        {/* Donations Section */}
-        <EventDonation 
-          eventId={id} 
-          user={user}
-          currentDonations={event.donations || 0}
-          onDonation={() => {
-            API.get(`/events/${id}`).then(res => setEvent(res.data));
-          }}
-        />
-
-        {/* Picture Posts Section */}
-        <EventPosts 
-          eventId={id}
-          user={user}
-          isAttending={isAttending}
-          canPost={canSharePhotos}
-          requiresModeration={event.requiresModeration || false}
-          onPostsChange={() => {
-            API.get(`/events/${id}`).then(res => setEvent(res.data));
-          }}
-        />
-
-        {/* Comments Section */}
-        <EventComments 
-          eventId={id}
-          user={user}
-          comments={event.comments || []}
-        />
       </div>
     </div>
   );

@@ -2,13 +2,11 @@ import { useState, useEffect } from "react";
 import { API } from "../api";
 import { useNavigate } from "react-router-dom";
 
+const inputCls = "w-full bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-600 p-3.5 rounded-xl text-sm focus:outline-none focus:border-amber-400/50 transition-all";
+const labelCls = "block text-xs font-bold tracking-widest uppercase text-zinc-500 mb-2";
+
 export default function CreateBlog() {
-  const [form, setForm] = useState({
-    title: "",
-    content: "",
-    event: "",
-    featured: false
-  });
+  const [form, setForm] = useState({ title: "", content: "", event: "", featured: false });
   const [image, setImage] = useState(null);
   const [preview, setPreview] = useState(null);
   const [events, setEvents] = useState([]);
@@ -17,10 +15,7 @@ export default function CreateBlog() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch events for selection
-    API.get("/events")
-      .then(res => setEvents(res.data))
-      .catch(() => console.log("Failed to load events"));
+    API.get("/events").then(res => setEvents(res.data)).catch(() => {});
   }, []);
 
   const handleImage = (e) => {
@@ -32,111 +27,91 @@ export default function CreateBlog() {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const formData = new FormData();
-      formData.append("title", form.title);
-      formData.append("content", form.content);
-      formData.append("event", form.event || null);
-      formData.append("featured", form.featured);
-      if (image) formData.append("image", image);
-
-      const res = await API.post("/blogs", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const fd = new FormData();
+      fd.append("title", form.title);
+      fd.append("content", form.content);
+      fd.append("event", form.event || "");
+      fd.append("featured", form.featured);
+      if (image) fd.append("image", image);
+      const res = await API.post("/blogs", fd, { headers: { "Content-Type": "multipart/form-data" } });
       navigate(`/blog/${res.data._id}`);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create blog");
-    } finally {
-      setLoading(false);
-    }
+      setError(err.response?.data?.message || "Failed to publish");
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow p-8">
-        <h1 className="text-3xl font-extrabold text-gray-800 mb-2">Write a Blog Post</h1>
-        <p className="text-gray-500 text-sm mb-8">Share your thoughts about events and the community</p>
+    <div className="min-h-screen bg-zinc-950 text-white py-12 px-4" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <div className="max-w-2xl mx-auto">
+        <div className="mb-8">
+          <button onClick={() => navigate(-1)} className="text-zinc-600 hover:text-zinc-400 text-sm mb-4 block transition-colors">← Back</button>
+          <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-2">Blog</p>
+          <h1 className="text-4xl font-black">Write a Post</h1>
+          <p className="text-zinc-600 text-sm mt-1">Share your thoughts with the community</p>
+        </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
-            {error}
-          </div>
+          <div className="bg-red-500/10 border border-red-500/25 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{error}</div>
         )}
 
-        <div className="space-y-5">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Blog Title</label>
-            <input
-              className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              placeholder="e.g. My Experience at TechConf 2026"
-              value={form.title}
-              onChange={e => setForm({ ...form, title: e.target.value })}
-            />
+            <label className={labelCls}>Title</label>
+            <input className={inputCls} placeholder="e.g. My Experience at TechConf 2026"
+              value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
-            <textarea
-              className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              placeholder="Write your blog post here..."
-              rows={8}
-              value={form.content}
-              onChange={e => setForm({ ...form, content: e.target.value })}
-            />
+            <label className={labelCls}>Content</label>
+            <textarea className={inputCls} placeholder="Write your story…" rows={10}
+              value={form.content} onChange={e => setForm(f => ({ ...f, content: e.target.value }))} />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Related Event (optional)</label>
-            <select
-              className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              value={form.event}
-              onChange={e => setForm({ ...form, event: e.target.value })}
-            >
-              <option value="">-- Select an event --</option>
-              {events.map(event => (
-                <option key={event._id} value={event._id}>
-                  {event.title}
-                </option>
-              ))}
+            <label className={labelCls}>Related Event (optional)</label>
+            <select className={inputCls} value={form.event}
+              onChange={e => setForm(f => ({ ...f, event: e.target.value }))}>
+              <option value="">— Select an event —</option>
+              {events.map(ev => <option key={ev._id} value={ev._id}>{ev.title}</option>)}
             </select>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Featured Image</label>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleImage}
-              className="w-full border border-gray-200 p-3 rounded-lg text-sm text-gray-500"
-            />
-            {preview && (
-              <img
-                src={preview}
-                alt="Preview"
-                className="mt-3 w-full h-48 object-cover rounded-lg border"
-              />
-            )}
-          </div>
+          {/* Featured toggle */}
+          <label className="flex items-start gap-3 cursor-pointer p-4 bg-zinc-800/50 border border-zinc-700 rounded-2xl hover:border-zinc-600 transition-all">
+            <div className="relative mt-0.5">
+              <input type="checkbox" className="sr-only" checked={form.featured}
+                onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))} />
+              <div className={`w-10 h-5 rounded-full transition-colors ${form.featured ? "bg-amber-400" : "bg-zinc-700"}`} />
+              <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${form.featured ? "translate-x-5" : ""}`} />
+            </div>
+            <div>
+              <p className="text-sm font-bold text-white">Mark as featured</p>
+              <p className="text-xs text-zinc-600 mt-0.5">Will appear in the homepage carousel</p>
+            </div>
+          </label>
 
-          <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg">
-            <input
-              type="checkbox"
-              id="featured"
-              checked={form.featured}
-              onChange={e => setForm({ ...form, featured: e.target.checked })}
-              className="rounded"
-            />
-            <label htmlFor="featured" className="text-sm text-gray-700 cursor-pointer">
-              Mark as featured (will appear in homepage carousel)
+          {/* Image */}
+          <div>
+            <label className={labelCls}>Featured Image</label>
+            <label className="block cursor-pointer">
+              <div className={`border-2 border-dashed border-zinc-700 rounded-2xl overflow-hidden hover:border-amber-400/40 transition-all ${preview ? "" : "p-8 text-center"}`}>
+                {preview ? (
+                  <img src={preview} alt="Preview" className="w-full h-52 object-cover" />
+                ) : (
+                  <div>
+                    <p className="text-3xl mb-2">🖼️</p>
+                    <p className="text-zinc-600 text-sm">Click to upload cover image</p>
+                  </div>
+                )}
+              </div>
+              <input type="file" accept="image/*" onChange={handleImage} className="hidden" />
             </label>
           </div>
         </div>
 
-        <button
-          onClick={handleSubmit}
-          disabled={loading || !form.title || !form.content}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg mt-8 font-medium hover:bg-blue-700 transition disabled:opacity-50"
-        >
-          {loading ? "Publishing..." : "Publish Blog Post"}
+        <button onClick={handleSubmit} disabled={loading || !form.title || !form.content}
+          className="w-full mt-4 bg-gradient-to-r from-amber-400 to-orange-400 text-zinc-950 py-4 rounded-2xl font-black text-base hover:from-amber-300 hover:to-orange-300 transition-all disabled:opacity-40 shadow-lg shadow-amber-500/20">
+          {loading ? "Publishing…" : "Publish Post"}
         </button>
       </div>
     </div>

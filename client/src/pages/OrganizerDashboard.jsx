@@ -2,96 +2,111 @@ import { useEffect, useState } from "react";
 import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 
-const StatusBadge = ({ status }) => {
+function StatusBadge({ status }) {
   const map = {
-    ongoing:  "bg-green-100 text-green-700",
-    upcoming: "bg-blue-100 text-blue-700",
-    past:     "bg-gray-100 text-gray-500",
+    ongoing:  "text-emerald-400 bg-emerald-400/10 border-emerald-400/25",
+    upcoming: "text-sky-400 bg-sky-400/10 border-sky-400/25",
+    past:     "text-zinc-500 bg-zinc-800 border-zinc-700",
   };
+  const dot = { ongoing: "bg-emerald-400 animate-pulse", upcoming: "bg-sky-400", past: "bg-zinc-600" };
+  const label = { ongoing: "Live Now", upcoming: "Upcoming", past: "Ended" };
   return (
-    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${map[status]}`}>
-      {status === "ongoing" && "🟢 "}{status}
+    <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border ${map[status]}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dot[status]}`} />
+      {label[status]}
     </span>
   );
-};
+}
 
 function AttendeeModal({ event, onClose }) {
-  const active    = event.tickets.filter(t => t.status === "active");
+  const active = event.tickets.filter(t => t.status === "active");
   const cancelled = event.tickets.filter(t => t.status === "cancelled");
+  const [copied, setCopied] = useState(null);
+
+  const copy = (code, id) => {
+    navigator.clipboard.writeText(code);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 2000);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[85vh] flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b">
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm px-4 pb-4 md:pb-0">
+      <div className="bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl"
+        style={{ fontFamily: "'Syne', sans-serif" }}>
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-zinc-800">
           <div>
-            <h2 className="font-bold text-gray-800 text-lg">Attendees & Tickets</h2>
-            <p className="text-sm text-gray-500 truncate">{event.title}</p>
+            <h2 className="font-black text-white text-lg">Attendees & Tickets</h2>
+            <p className="text-zinc-500 text-xs mt-0.5 truncate max-w-[260px]">{event.title}</p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+          <button onClick={onClose}
+            className="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all">
+            ×
+          </button>
         </div>
 
-        {/* Summary */}
-        <div className="grid grid-cols-3 gap-3 px-6 py-4 border-b bg-gray-50">
-          <div className="text-center">
-            <p className="text-xl font-bold text-gray-800">{event.tickets.length}</p>
-            <p className="text-xs text-gray-500">Total</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-bold text-green-600">{active.length}</p>
-            <p className="text-xs text-gray-500">Active</p>
-          </div>
-          <div className="text-center">
-            <p className="text-xl font-bold text-red-400">{cancelled.length}</p>
-            <p className="text-xs text-gray-500">Cancelled</p>
-          </div>
+        {/* Summary pills */}
+        <div className="grid grid-cols-3 gap-2 px-6 py-4 border-b border-zinc-800">
+          {[
+            { label: "Total",     value: event.tickets.length, color: "text-white" },
+            { label: "Active",    value: active.length,        color: "text-emerald-400" },
+            { label: "Cancelled", value: cancelled.length,     color: "text-red-400" },
+          ].map(s => (
+            <div key={s.label} className="text-center bg-zinc-800/50 rounded-xl py-3">
+              <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+              <p className="text-[10px] tracking-widest uppercase text-zinc-600 mt-0.5">{s.label}</p>
+            </div>
+          ))}
         </div>
 
         {/* List */}
-        <div className="overflow-y-auto flex-1 p-4">
+        <div className="overflow-y-auto flex-1 p-4 space-y-2">
           {event.tickets.length === 0 ? (
-            <p className="text-center text-gray-400 py-8">No attendees yet</p>
-          ) : (
-            <ul className="space-y-3">
-              {event.tickets.map((t, i) => (
-                <li key={t._id || i}
-                  className={`p-4 rounded-xl border ${t.status === "cancelled" ? "bg-red-50 border-red-100 opacity-60" : "bg-gray-50 border-gray-100"}`}>
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-                        {t.user?.name?.[0]?.toUpperCase()}
-                      </div>
-                      <div>
-                        <p className="font-semibold text-gray-800 text-sm">{t.user?.name}</p>
-                        <p className="text-xs text-gray-400">{t.user?.email}</p>
-                      </div>
-                    </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${t.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-500"}`}>
-                      {t.status}
-                    </span>
+            <div className="text-center py-12">
+              <p className="text-4xl mb-3">🎟</p>
+              <p className="text-zinc-600 text-xs tracking-widest uppercase">No attendees yet</p>
+            </div>
+          ) : event.tickets.map((t, i) => (
+            <div key={t._id || i}
+              className={`p-4 rounded-2xl border transition-all ${
+                t.status === "cancelled"
+                  ? "bg-red-950/20 border-red-900/30 opacity-60"
+                  : "bg-zinc-800/50 border-zinc-700/50 hover:border-zinc-600"
+              }`}>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-zinc-950 font-black text-sm flex-shrink-0">
+                    {t.user?.name?.[0]?.toUpperCase()}
                   </div>
-                  {/* Ticket code */}
-                  <div className="flex items-center gap-2 bg-white border border-dashed border-gray-200 rounded-lg px-3 py-2">
-                    <span className="text-xs text-gray-400 font-mono">TICKET</span>
-                    <span className="font-mono font-bold text-blue-600 text-sm tracking-widest flex-1">
-                      {t.ticketCode}
-                    </span>
-                    <button
-                      onClick={() => navigator.clipboard.writeText(t.ticketCode)}
-                      className="text-xs text-gray-400 hover:text-blue-600 transition"
-                      title="Copy ticket code"
-                    >
-                      📋
-                    </button>
+                  <div>
+                    <p className="font-bold text-white text-sm">{t.user?.name}</p>
+                    <p className="text-zinc-500 text-xs">{t.user?.email}</p>
                   </div>
-                  <div className="flex justify-between mt-2 text-xs text-gray-400">
-                    <span>Issued {new Date(t.issuedAt).toLocaleDateString()}</span>
-                    {t.paidAmount > 0 && <span className="text-green-600 font-medium">₦{t.paidAmount.toLocaleString()} paid</span>}
-                    {t.paidAmount === 0 && <span>Free ticket</span>}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+                </div>
+                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${
+                  t.status === "active" ? "bg-emerald-400/10 text-emerald-400" : "bg-red-500/10 text-red-400"
+                }`}>
+                  {t.status}
+                </span>
+              </div>
+
+              {/* Ticket code */}
+              <div className="flex items-center gap-2 bg-black/30 border border-dashed border-zinc-600 rounded-xl px-3 py-2">
+                <span className="text-[9px] text-zinc-600 font-mono tracking-widest uppercase">Ticket</span>
+                <span className="font-mono font-black text-amber-400 text-sm tracking-[0.15em] flex-1">{t.ticketCode}</span>
+                <button onClick={() => copy(t.ticketCode, t._id || i)}
+                  className="text-zinc-500 hover:text-amber-400 transition-colors text-sm">
+                  {copied === (t._id || i) ? "✓" : "📋"}
+                </button>
+              </div>
+              <div className="flex justify-between mt-2 text-[10px] text-zinc-600">
+                <span>Issued {new Date(t.issuedAt).toLocaleDateString()}</span>
+                <span className={t.paidAmount > 0 ? "text-emerald-500 font-semibold" : ""}>
+                  {t.paidAmount > 0 ? `₦${t.paidAmount.toLocaleString()} paid` : "Free"}
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
@@ -102,7 +117,7 @@ export default function OrganizerDashboard() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("upcoming");
-  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [selected, setSelected] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -117,157 +132,126 @@ export default function OrganizerDashboard() {
     upcoming: events.filter(e => e.status === "upcoming").length,
     past:     events.filter(e => e.status === "past").length,
   };
-
   const filtered = events.filter(e => e.status === tab);
-
-  const totalAttendees = events.reduce((sum, e) =>
-    sum + e.tickets.filter(t => t.status === "active").length, 0);
-  const totalRevenue = events.reduce((sum, e) =>
-    sum + e.tickets.filter(t => t.status === "active")
-      .reduce((s, t) => s + (t.paidAmount || 0), 0), 0);
+  const totalAttendees = events.reduce((s, e) => s + e.tickets.filter(t => t.status === "active").length, 0);
+  const totalRevenue = events.reduce((s, e) => s + e.tickets.filter(t => t.status === "active").reduce((a, t) => a + (t.paidAmount || 0), 0), 0);
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="w-10 h-10 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
-      {selectedEvent && (
-        <AttendeeModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-      )}
+    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+      {selected && <AttendeeModal event={selected} onClose={() => setSelected(null)} />}
+      <div className="h-px w-full bg-gradient-to-r from-sky-400 via-emerald-400 to-amber-400" />
 
-      <div className="max-w-5xl mx-auto">
-
+      <div className="max-w-5xl mx-auto px-5 py-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-10">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-800">My Events</h1>
-            <p className="text-gray-500 text-sm mt-1">Manage your events and track attendance</p>
+            <p className="text-[10px] tracking-[0.35em] uppercase text-emerald-400 font-bold mb-2">Organizer Hub</p>
+            <h1 className="text-5xl font-black leading-none">My Events</h1>
+            <p className="text-zinc-600 text-sm mt-1">Manage events and track your audience</p>
           </div>
-          <Link to="/create"
-            className="bg-blue-600 text-white px-5 py-2.5 rounded-xl text-sm font-medium hover:bg-blue-700 transition">
+          <Link to="/create" className="self-start md:self-auto px-5 py-2.5 bg-amber-400 text-zinc-950 rounded-xl text-sm font-black hover:bg-amber-300 transition-all">
             + Create Event
           </Link>
         </div>
 
-        {/* Summary stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
           {[
-            { icon: "🎟", label: "Total Events",   value: events.length      },
-            { icon: "👥", label: "Total Attendees", value: totalAttendees     },
-            { icon: "💰", label: "Revenue",         value: `₦${totalRevenue.toLocaleString()}` },
-            { icon: "🟢", label: "Live Now",        value: counts.ongoing     },
+            { icon: "🎟", label: "Events",     value: events.length,                          color: "border-amber-500/20" },
+            { icon: "👥", label: "Attendees",  value: totalAttendees,                         color: "border-sky-500/20" },
+            { icon: "💰", label: "Revenue",    value: `₦${totalRevenue.toLocaleString()}`,    color: "border-emerald-500/20" },
+            { icon: "🟢", label: "Live Now",   value: counts.ongoing,                         color: "border-rose-500/20" },
           ].map(s => (
-            <div key={s.label} className="bg-white rounded-2xl shadow-sm p-5 flex items-center gap-3">
+            <div key={s.label} className={`bg-zinc-900 border ${s.color} rounded-2xl p-5 flex items-center gap-3`}>
               <span className="text-2xl">{s.icon}</span>
               <div>
-                <p className="text-xl font-extrabold text-gray-800">{s.value}</p>
-                <p className="text-xs text-gray-500">{s.label}</p>
+                <p className="text-2xl font-black text-white">{s.value}</p>
+                <p className="text-[10px] font-bold tracking-widest uppercase text-zinc-600">{s.label}</p>
               </div>
             </div>
           ))}
         </div>
 
-        {/* Tab switcher */}
+        {/* Tabs */}
         <div className="flex gap-2 mb-6">
           {[
-            { key: "ongoing",  label: "🟢 Ongoing",  count: counts.ongoing  },
-            { key: "upcoming", label: "📅 Upcoming", count: counts.upcoming },
-            { key: "past",     label: "⏳ Past",      count: counts.past    },
+            { key: "ongoing",  icon: "🟢", label: "Live",     count: counts.ongoing },
+            { key: "upcoming", icon: "📅", label: "Upcoming", count: counts.upcoming },
+            { key: "past",     icon: "📦", label: "Past",     count: counts.past },
           ].map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition border ${
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all border ${
                 tab === t.key
-                  ? "bg-blue-600 text-white border-blue-600"
-                  : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"}`}>
-              {t.label}
-              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
-                tab === t.key ? "bg-white/20 text-white" : "bg-gray-100 text-gray-500"}`}>
+                  ? "bg-amber-400 text-zinc-950 border-amber-400"
+                  : "bg-zinc-900 text-zinc-500 border-zinc-800 hover:border-zinc-600 hover:text-white"}`}>
+              {t.icon} {t.label}
+              <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
+                tab === t.key ? "bg-zinc-950/20 text-zinc-950" : "bg-zinc-800 text-zinc-500"}`}>
                 {t.count}
               </span>
             </button>
           ))}
         </div>
 
-        {/* Event cards */}
+        {/* Cards */}
         {filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-sm p-16 text-center">
-            <p className="text-5xl mb-4">
-              {tab === "ongoing" ? "🎤" : tab === "upcoming" ? "📅" : "📦"}
-            </p>
-            <p className="text-lg font-bold text-gray-700 mb-1">
-              No {tab} events
-            </p>
-            <p className="text-gray-400 text-sm mb-4">
-              {tab === "upcoming" ? "Create an event to get started." : `No ${tab} events yet.`}
-            </p>
+          <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-16 text-center">
+            <p className="text-5xl mb-4">{tab === "ongoing" ? "🎤" : tab === "upcoming" ? "📅" : "📦"}</p>
+            <p className="font-black text-white text-lg mb-1">No {tab} events</p>
+            <p className="text-zinc-600 text-sm mb-5">{tab === "upcoming" ? "Create your first event." : `No ${tab} events yet.`}</p>
             {tab === "upcoming" && (
-              <Link to="/create"
-                className="inline-block bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition">
+              <Link to="/create" className="inline-block bg-amber-400 text-zinc-950 px-6 py-2.5 rounded-xl text-sm font-black hover:bg-amber-300 transition-all">
                 Create Event
               </Link>
             )}
           </div>
         ) : (
-          <div className="space-y-4">
-            {filtered.map(event => {
-              const activeTickets = event.tickets.filter(t => t.status === "active").length;
-              const fillPct = Math.min((activeTickets / event.capacity) * 100, 100);
-
+          <div className="space-y-3">
+            {filtered.map(ev => {
+              const active = ev.tickets.filter(t => t.status === "active").length;
+              const pct = Math.min((active / ev.capacity) * 100, 100);
               return (
-                <div key={event._id} className="bg-white rounded-2xl shadow-sm overflow-hidden">
-                  <div className="flex gap-4 p-6">
-                    {/* Image */}
-                    <div className="w-24 h-24 rounded-xl overflow-hidden bg-gray-100 flex-shrink-0">
-                      {event.image
-                        ? <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+                <div key={ev._id} className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-700 transition-all">
+                  <div className="flex gap-4 p-5">
+                    <div className="w-20 h-20 rounded-xl overflow-hidden bg-zinc-800 flex-shrink-0 ring-1 ring-white/5">
+                      {ev.image
+                        ? <img src={ev.image} alt={ev.title} className="w-full h-full object-cover" />
                         : <div className="w-full h-full flex items-center justify-center text-3xl">🎟</div>}
                     </div>
-
-                    {/* Info */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2 mb-1">
-                        <h2 className="font-bold text-gray-800 text-base truncate">{event.title}</h2>
-                        <StatusBadge status={event.status} />
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <h3 className="font-black text-white text-base truncate">{ev.title}</h3>
+                        <StatusBadge status={ev.status} />
                       </div>
-                      <p className="text-sm text-gray-500 mb-1">
-                        📍 {event.location} · 📅 {new Date(event.date).toDateString()}
-                      </p>
-                      <p className="text-sm font-semibold mb-3">
-                        <span className={event.price === 0 ? "text-green-600" : "text-blue-600"}>
-                          {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
+                      <p className="text-zinc-500 text-xs mb-2">📍 {ev.location} · 📅 {new Date(ev.date).toDateString()}</p>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-sm font-black ${ev.price === 0 ? "text-emerald-400" : "text-amber-400"}`}>
+                          {ev.price === 0 ? "Free" : `₦${ev.price.toLocaleString()}`}
                         </span>
-                        <span className="text-gray-400 font-normal ml-2">
-                          · {activeTickets} / {event.capacity} attending
-                        </span>
-                      </p>
-
-                      {/* Capacity bar */}
-                      <div className="w-full bg-gray-100 rounded-full h-1.5">
-                        <div
-                          className="h-1.5 rounded-full transition-all bg-blue-500"
-                          style={{ width: `${fillPct}%` }}
-                        />
+                        <span className="text-xs text-zinc-600">{active}/{ev.capacity} attending</span>
+                      </div>
+                      <div className="w-full bg-zinc-800 rounded-full h-1">
+                        <div className="h-1 bg-gradient-to-r from-amber-400 to-orange-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   </div>
-
-                  {/* Actions */}
-                  <div className="flex border-t divide-x">
-                    <button
-                      onClick={() => setSelectedEvent(event)}
-                      className="flex-1 py-3 text-sm text-blue-600 font-medium hover:bg-blue-50 transition flex items-center justify-center gap-1"
-                    >
-                      👥 Attendees ({activeTickets})
+                  <div className="flex border-t border-zinc-800 divide-x divide-zinc-800">
+                    <button onClick={() => setSelected(ev)}
+                      className="flex-1 py-3 text-xs font-bold text-amber-400 hover:bg-amber-400/5 transition-all flex items-center justify-center gap-1.5">
+                      👥 Attendees ({active})
                     </button>
-                    <Link to={`/events/${event._id}`}
-                      className="flex-1 py-3 text-sm text-gray-600 font-medium hover:bg-gray-50 transition flex items-center justify-center gap-1">
+                    <Link to={`/events/${ev._id}`}
+                      className="flex-1 py-3 text-xs font-bold text-zinc-400 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-1.5">
                       👁 View
                     </Link>
-                    <Link to={`/events/${event._id}/edit`}
-                      className="flex-1 py-3 text-sm text-gray-600 font-medium hover:bg-gray-50 transition flex items-center justify-center gap-1">
+                    <Link to={`/events/${ev._id}/edit`}
+                      className="flex-1 py-3 text-xs font-bold text-zinc-400 hover:text-white hover:bg-white/5 transition-all flex items-center justify-center gap-1.5">
                       ✏️ Edit
                     </Link>
                   </div>

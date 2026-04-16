@@ -3,10 +3,13 @@ import { API } from "../api";
 import { useNavigate } from "react-router-dom";
 import { getUserTimezone, COMMON_TIMEZONES } from "../utils/timeFormatting";
 
+const inputCls = "w-full bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-600 p-3.5 rounded-xl text-sm focus:outline-none focus:border-amber-400/50 transition-all";
+const labelCls = "block text-xs font-bold tracking-widest uppercase text-zinc-500 mb-2";
+
 export default function CreateEvent() {
   const [form, setForm] = useState({
-    title: "", description: "", date: "",
-    location: "", timezone: getUserTimezone(), price: 0, capacity: 100,
+    title: "", description: "", date: "", location: "",
+    timezone: getUserTimezone(), price: 0, capacity: 100,
     requiresModeration: false, specialCode: "",
     faq: [{ question: "", answer: "" }]
   });
@@ -15,6 +18,8 @@ export default function CreateEvent() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
   const handleImage = (e) => {
     const file = e.target.files[0];
@@ -25,196 +30,159 @@ export default function CreateEvent() {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      const formData = new FormData();
-      formData.append("title", form.title);
-      formData.append("description", form.description);
-      formData.append("date", form.date);
-      formData.append("timezone", form.timezone);
-      formData.append("location", form.location);
-      formData.append("price", form.price);
-      formData.append("capacity", form.capacity);
-      formData.append("requiresModeration", form.requiresModeration);
-      formData.append("specialCode", form.specialCode);
-      const faqItems = form.faq.filter(item => item.question.trim() || item.answer.trim());
-      formData.append("faq", JSON.stringify(faqItems));
-      if (image) formData.append("image", image);
-
-      await API.post("/events", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
+      const fd = new FormData();
+      Object.entries(form).forEach(([k, v]) => {
+        if (k === "faq") fd.append(k, JSON.stringify(v.filter(i => i.question.trim() || i.answer.trim())));
+        else fd.append(k, v);
       });
+      if (image) fd.append("image", image);
+      await API.post("/events", fd, { headers: { "Content-Type": "multipart/form-data" } });
       navigate("/");
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create event");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow p-8">
-        <h1 className="text-3xl font-extrabold text-gray-800 mb-2">Create Event</h1>
-        <p className="text-gray-500 text-sm mb-8">Fill in the details to publish a new event</p>
+    <div className="min-h-screen bg-zinc-950 text-white py-12 px-4" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <div className="max-w-2xl mx-auto">
+        {/* Header */}
+        <div className="mb-8">
+          <button onClick={() => navigate(-1)} className="text-zinc-600 hover:text-zinc-400 text-sm mb-4 block transition-colors">← Back</button>
+          <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-2">New Event</p>
+          <h1 className="text-4xl font-black">Create Event</h1>
+          <p className="text-zinc-600 text-sm mt-1">Fill in the details to publish your event</p>
+        </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-6 text-sm">
-            {error}
-          </div>
+          <div className="bg-red-500/10 border border-red-500/25 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{error}</div>
         )}
 
-        <div className="space-y-5">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 space-y-6">
+          {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Event Title</label>
-            <input className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              placeholder="e.g. Tech Conference 2026"
-              onChange={e => setForm({ ...form, title: e.target.value })} />
+            <label className={labelCls}>Event Title</label>
+            <input className={inputCls} placeholder="e.g. Tech Conference 2026" onChange={e => set("title", e.target.value)} />
           </div>
 
+          {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              placeholder="Describe your event..." rows={4}
-              onChange={e => setForm({ ...form, description: e.target.value })} />
+            <label className={labelCls}>Description</label>
+            <textarea className={inputCls} placeholder="Describe your event…" rows={4}
+              onChange={e => set("description", e.target.value)} />
           </div>
 
+          {/* Date + Location */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-              <input type="date" className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                onChange={e => setForm({ ...form, date: e.target.value })} />
+              <label className={labelCls}>Date</label>
+              <input type="date" className={inputCls} onChange={e => set("date", e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-              <input className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                placeholder="e.g. Lagos, Nigeria"
-                onChange={e => setForm({ ...form, location: e.target.value })} />
+              <label className={labelCls}>Location</label>
+              <input className={inputCls} placeholder="Lagos, Nigeria" onChange={e => set("location", e.target.value)} />
             </div>
+          </div>
 
+          {/* Timezone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
-            <select className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-              value={form.timezone}
-              onChange={e => setForm({ ...form, timezone: e.target.value })}>
-              {COMMON_TIMEZONES.map(tz => (
-                <option key={tz} value={tz}>{tz}</option>
-              ))}
+            <label className={labelCls}>Timezone</label>
+            <select className={inputCls} value={form.timezone} onChange={e => set("timezone", e.target.value)}>
+              {COMMON_TIMEZONES.map(tz => <option key={tz} value={tz}>{tz}</option>)}
             </select>
-            <p className="text-xs text-gray-500 mt-1">Current location: {form.timezone}</p>
-          </div>
           </div>
 
+          {/* Price + Capacity */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Price (₦)</label>
-              <input type="number" className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                placeholder="0 for free"
-                onChange={e => setForm({ ...form, price: e.target.value })} />
+              <label className={labelCls}>Price (₦)</label>
+              <input type="number" className={inputCls} placeholder="0 for free" onChange={e => set("price", e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Capacity</label>
-              <input type="number" className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                placeholder="100"
-                onChange={e => setForm({ ...form, capacity: e.target.value })} />
+              <label className={labelCls}>Capacity</label>
+              <input type="number" className={inputCls} placeholder="100" onChange={e => set("capacity", e.target.value)} />
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center">
-              <input type="checkbox" id="requiresModeration" className="mr-3"
-                checked={form.requiresModeration}
-                onChange={e => setForm({ ...form, requiresModeration: e.target.checked })} />
-              <label htmlFor="requiresModeration" className="text-sm font-medium text-gray-700">
-                Require moderation for photo posts
-              </label>
-            </div>
-            <p className="text-xs text-gray-500 ml-6">
-              Enable for VIP events or exclusive gatherings where photo posts need admin approval before appearing in the gallery.
-            </p>
+          {/* Divider */}
+          <div className="border-t border-zinc-800 pt-2">
+            <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-4">Advanced Settings</p>
 
+            {/* Moderation toggle */}
+            <label className="flex items-start gap-3 cursor-pointer mb-5">
+              <div className="relative mt-0.5">
+                <input type="checkbox" className="sr-only" checked={form.requiresModeration}
+                  onChange={e => set("requiresModeration", e.target.checked)} />
+                <div className={`w-10 h-5 rounded-full transition-colors ${form.requiresModeration ? "bg-amber-400" : "bg-zinc-700"}`} />
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${form.requiresModeration ? "translate-x-5" : ""}`} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Require photo moderation</p>
+                <p className="text-xs text-zinc-600 mt-0.5">Admin approval before photos appear in gallery</p>
+              </div>
+            </label>
+
+            {/* Special code */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Special Access Code (Optional)</label>
-              <input className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                placeholder="e.g. VIP2026"
-                value={form.specialCode}
-                onChange={e => setForm({ ...form, specialCode: e.target.value })} />
-              <p className="text-xs text-gray-500 mt-1">
-                Attendees must enter this code to RSVP. Leave empty for public events.
-              </p>
+              <label className={labelCls}>Special Access Code (optional)</label>
+              <input className={inputCls} placeholder="e.g. VIP2026" value={form.specialCode}
+                onChange={e => set("specialCode", e.target.value)} />
+              <p className="text-xs text-zinc-600 mt-1.5">Leave empty for public events</p>
             </div>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Event FAQ</label>
-            <div className="space-y-4 mb-4">
+          {/* FAQ */}
+          <div className="border-t border-zinc-800 pt-6">
+            <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-4">FAQ</p>
+            <div className="space-y-3 mb-3">
               {form.faq.map((item, idx) => (
-                <div key={idx} className="space-y-3 p-4 rounded-xl border border-gray-200">
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold text-gray-800">FAQ {idx + 1}</p>
-                    <button
-                      type="button"
-                      onClick={() => setForm(prev => ({
-                        ...prev,
-                        faq: prev.faq.filter((_, i) => i !== idx)
-                      }))}
-                      className="text-sm text-red-500 hover:text-red-700"
+                <div key={idx} className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <p className="text-xs font-bold text-zinc-500 tracking-widest uppercase">Item {idx + 1}</p>
+                    <button onClick={() => setForm(f => ({ ...f, faq: f.faq.filter((_, i) => i !== idx) }))}
                       disabled={form.faq.length === 1}
-                    >
+                      className="text-xs text-red-500 hover:text-red-400 font-bold disabled:opacity-30 transition-colors">
                       Remove
                     </button>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Question</label>
-                    <input
-                      type="text"
-                      value={item.question}
-                      onChange={e => setForm(prev => ({
-                        ...prev,
-                        faq: prev.faq.map((faqItem, i) => i === idx ? { ...faqItem, question: e.target.value } : faqItem)
-                      }))}
-                      className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Answer</label>
-                    <textarea
-                      value={item.answer}
-                      onChange={e => setForm(prev => ({
-                        ...prev,
-                        faq: prev.faq.map((faqItem, i) => i === idx ? { ...faqItem, answer: e.target.value } : faqItem)
-                      }))}
-                      rows={3}
-                      className="w-full border border-gray-200 p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-                    />
-                  </div>
+                  <input value={item.question} placeholder="Question"
+                    className={inputCls}
+                    onChange={e => setForm(f => ({ ...f, faq: f.faq.map((q, i) => i === idx ? { ...q, question: e.target.value } : q) }))} />
+                  <textarea value={item.answer} placeholder="Answer" rows={2}
+                    className={inputCls}
+                    onChange={e => setForm(f => ({ ...f, faq: f.faq.map((q, i) => i === idx ? { ...q, answer: e.target.value } : q) }))} />
                 </div>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() => setForm(prev => ({
-                ...prev,
-                faq: [...prev.faq, { question: "", answer: "" }]
-              }))}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition"
-            >
-              + Add FAQ item
+            <button onClick={() => setForm(f => ({ ...f, faq: [...f.faq, { question: "", answer: "" }] }))}
+              className="text-xs font-bold text-amber-400 border border-amber-400/25 bg-amber-400/5 px-4 py-2 rounded-xl hover:bg-amber-400/10 transition-all">
+              + Add FAQ
             </button>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Event Image</label>
-            <input type="file" accept="image/*" onChange={handleImage}
-              className="w-full border border-gray-200 p-3 rounded-lg text-sm text-gray-500" />
-            {preview && (
-              <img src={preview} alt="Preview"
-                className="mt-3 w-full h-48 object-cover rounded-lg border" />
-            )}
+          {/* Image */}
+          <div className="border-t border-zinc-800 pt-6">
+            <label className={labelCls}>Event Image</label>
+            <label className="block cursor-pointer">
+              <div className={`border-2 border-dashed border-zinc-700 rounded-2xl overflow-hidden hover:border-amber-400/40 transition-all ${preview ? "" : "p-8 text-center"}`}>
+                {preview ? (
+                  <img src={preview} alt="Preview" className="w-full h-52 object-cover" />
+                ) : (
+                  <div>
+                    <p className="text-3xl mb-2">📸</p>
+                    <p className="text-zinc-600 text-sm">Click to upload image</p>
+                    <p className="text-zinc-700 text-xs mt-1">PNG, JPG up to 10MB</p>
+                  </div>
+                )}
+              </div>
+              <input type="file" accept="image/*" onChange={handleImage} className="hidden" />
+            </label>
           </div>
         </div>
 
         <button onClick={handleSubmit} disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg mt-8 font-medium hover:bg-blue-700 transition disabled:opacity-50">
-          {loading ? "Publishing..." : "Publish Event"}
+          className="w-full mt-4 bg-gradient-to-r from-amber-400 to-orange-400 text-zinc-950 py-4 rounded-2xl font-black text-base hover:from-amber-300 hover:to-orange-300 transition-all disabled:opacity-40 shadow-lg shadow-amber-500/20">
+          {loading ? "Publishing…" : "Publish Event"}
         </button>
       </div>
     </div>

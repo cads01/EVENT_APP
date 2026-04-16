@@ -2,82 +2,22 @@ import { useEffect, useState } from "react";
 import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { formatEventTimeShort, isPastEvent } from "../utils/timeFormatting";
-import EventCarousel from "../components/EventCarousel";
-import BlogCarousel from "../components/BlogCarousel";
 
 export default function Events() {
   const [events, setEvents] = useState([]);
-  const [blogs, setBlogs] = useState([]);
-  const [ongoingEvents, setOngoingEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [blogsLoading, setBlogsLoading] = useState(true);
-  const [deleteTarget, setDeleteTarget] = useState(null); // event to confirm delete
+  const [search, setSearch] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [bannerIndex, setBannerIndex] = useState(0);
   const { user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
 
-  const getEventLink = (event) =>
-    isPastEvent(event.date) ? `/events/${event._id}/summary` : `/events/${event._id}`;
-  
-  const upcomingPopularEvents = events
-    .filter(e => new Date(e.date) > new Date() && e.attendees.length > 0)
-    .sort((a, b) => b.attendees.length - a.attendees.length);
-
-  const featuredEvent = upcomingPopularEvents[bannerIndex] || upcomingPopularEvents[0];
-
-  const popularEvents = events
-    .filter(e => e.attendees.length > 0)
-    .sort((a, b) => b.attendees.length - a.attendees.length)
-    .slice(0, 10);
-
-  const eventsByLocation = {};
-  events.forEach(event => {
-    const loc = event.location || 'Other';
-    if (!eventsByLocation[loc]) eventsByLocation[loc] = [];
-    eventsByLocation[loc].push(event);
-  });
-
-  const freeEvents = events.filter(e => e.price === 0);
-  const paidEvents = events.filter(e => e.price > 0);
-  const upcomingEvents = events.filter(e => new Date(e.date) > new Date());
-  const pastEvents = events.filter(e => new Date(e.date) <= new Date());
-
   useEffect(() => {
-    // Fetch events
     API.get("/events")
-      .then(res => {
-        setEvents(res.data);
-        setOngoingEvents(res.data);
-      })
+      .then(res => setEvents(res.data))
       .finally(() => setLoading(false));
-
-    // Fetch featured blogs
-    API.get("/blogs")
-      .then(res => {
-        // Sort by featured and recent
-        const sorted = res.data.sort((a, b) => {
-          if (a.featured === b.featured) {
-            return new Date(b.createdAt) - new Date(a.createdAt);
-          }
-          return b.featured - a.featured;
-        });
-        setBlogs(sorted.slice(0, 12)); // Get top 12 blogs
-      })
-      .catch(err => console.log("Blogs not available yet"))
-      .finally(() => setBlogsLoading(false));
   }, []);
-
-  // Auto-rotate banner
-  useEffect(() => {
-    if (upcomingPopularEvents.length === 0) return;
-    const interval = setInterval(() => {
-      setBannerIndex((prev) => (prev + 1) % upcomingPopularEvents.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [upcomingPopularEvents.length]);
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -87,337 +27,178 @@ export default function Events() {
       setEvents(prev => prev.filter(e => e._id !== deleteTarget._id));
       setDeleteTarget(null);
     } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete event");
+      alert(err.response?.data?.message || "Failed to delete");
     } finally {
       setDeleting(false);
     }
   };
 
+  const filtered = events.filter(e =>
+    e.title.toLowerCase().includes(search.toLowerCase()) ||
+    e.location.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const getStatus = (date) => {
+    const now = new Date(), d = new Date(date);
+    if (d < now) return "past";
+    if (d <= new Date(now.getTime() + 86400000)) return "ongoing";
+    return "upcoming";
+  };
+
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg)" }}>
-      {/* Delete confirmation modal */}
+    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+      {/* Delete confirm modal */}
       {deleteTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-sm w-full">
-            <div className="text-4xl mb-4 text-center">🗑️</div>
-            <h2 className="text-xl font-bold text-gray-800 text-center mb-2">Delete Event?</h2>
-            <p className="text-gray-500 text-sm text-center mb-6">
-              <span className="font-semibold text-gray-700">"{deleteTarget.title}"</span> will be permanently deleted.
-              This cannot be undone.
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
+            <p className="text-4xl text-center mb-4">🗑️</p>
+            <h2 className="text-xl font-black text-white text-center mb-2">Move to Trash?</h2>
+            <p className="text-zinc-500 text-sm text-center mb-6">
+              "<span className="text-white font-semibold">{deleteTarget.title}</span>" will be moved to the recycle bin.
             </p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteTarget(null)}
-                className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl font-medium hover:bg-gray-50 transition text-sm"
-              >
+              <button onClick={() => setDeleteTarget(null)}
+                className="flex-1 border border-zinc-700 text-zinc-400 py-3 rounded-xl text-sm font-bold hover:border-zinc-500 hover:text-white transition-all">
                 Cancel
               </button>
-              <button
-                onClick={handleDelete}
-                disabled={deleting}
-                className="flex-1 bg-red-500 text-white py-2.5 rounded-xl font-medium hover:bg-red-600 transition text-sm disabled:opacity-50"
-              >
-                {deleting ? "Deleting..." : "Yes, Delete"}
+              <button onClick={handleDelete} disabled={deleting}
+                className="flex-1 bg-red-500 text-white py-3 rounded-xl text-sm font-bold hover:bg-red-400 transition-all disabled:opacity-40">
+                {deleting ? "Moving…" : "Move to Trash"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Hero Banner - Full Screen Slideshow */}
-      <div className="relative h-screen flex items-center justify-center overflow-hidden">
-        {upcomingPopularEvents.length > 0 ? (
-          <>
-            {/* Background Images */}
-            {upcomingPopularEvents.map((event, idx) => (
-              <div
-                key={event._id}
-                className={`absolute inset-0 transition-opacity duration-1000 ${
-                  idx === bannerIndex ? "opacity-100" : "opacity-0"
-                }`}
-              >
-                {event.image ? (
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-9xl">🎟</div>
-                )}
-              </div>
-            ))}
-            
-            {/* Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-            <div className="absolute inset-0 bg-black/30" />
+      {/* Hero */}
+      <div className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-950 to-black" />
+        <div className="absolute inset-0 opacity-30"
+          style={{ backgroundImage: "radial-gradient(circle at 20% 50%, #f59e0b33 0%, transparent 50%), radial-gradient(circle at 80% 20%, #0ea5e933 0%, transparent 50%)" }} />
+        <div className="absolute inset-0"
+          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+        <div className="relative px-5 py-20 text-center max-w-3xl mx-auto">
+          <p className="text-[10px] tracking-[0.4em] uppercase text-amber-400 font-bold mb-4">EventApp</p>
+          <h1 className="text-5xl md:text-7xl font-black leading-none tracking-tight mb-4">
+            Discover<br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">Events</span>
+          </h1>
+          <p className="text-zinc-500 text-base mb-8">Find and attend the best events happening around you</p>
 
-            {/* Content */}
-            <div className="relative z-10 text-center px-4 max-w-4xl mx-auto text-white">
-              <span className="inline-block bg-yellow-500/20 text-yellow-300 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-                🔥 Upcoming Featured Event
-              </span>
-              <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight">{featuredEvent.title}</h1>
-              <div className="flex flex-wrap justify-center gap-6 text-lg md:text-xl mb-8 font-light">
-                <span>📍 {featuredEvent.location}</span>
-                <span>📅 {formatEventTimeShort(featuredEvent.date, featuredEvent.timezone || 'UTC')}</span>
-                <span>👥 {featuredEvent.attendees.length} attending</span>
-              </div>
-              <Link to={getEventLink(featuredEvent)} 
-                className="inline-block bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-8 py-4 rounded-full font-bold text-lg hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-xl">
-                View Event Details →
+          {/* Search */}
+          <div className="relative max-w-md mx-auto">
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search events or locations…"
+              className="w-full bg-zinc-900/80 border border-zinc-700 rounded-2xl px-5 py-3.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400/50 backdrop-blur-sm transition-all"
+            />
+            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600">🔍</span>
+          </div>
+
+          {isAdmin && (
+            <div className="flex justify-center gap-3 mt-6">
+              <Link to="/create"
+                className="px-6 py-2.5 bg-amber-400 text-zinc-950 rounded-xl text-sm font-black hover:bg-amber-300 transition-all">
+                + Create Event
+              </Link>
+              <Link to="/admin"
+                className="px-6 py-2.5 bg-zinc-800 border border-zinc-700 text-zinc-300 rounded-xl text-sm font-bold hover:border-zinc-500 transition-all">
+                Admin Dashboard
               </Link>
             </div>
+          )}
+        </div>
+      </div>
 
-            {/* Navigation Arrows */}
-            <button
-              onClick={() => setBannerIndex((prev) => (prev - 1 + upcomingPopularEvents.length) % upcomingPopularEvents.length)}
-              className="absolute left-6 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white rounded-full w-14 h-14 flex items-center justify-center transition backdrop-blur-sm text-3xl font-bold"
-            >
-              ‹
-            </button>
-            <button
-              onClick={() => setBannerIndex((prev) => (prev + 1) % upcomingPopularEvents.length)}
-              className="absolute right-6 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white rounded-full w-14 h-14 flex items-center justify-center transition backdrop-blur-sm text-3xl font-bold"
-            >
-              ›
-            </button>
-
-            {/* Indicators */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-              {upcomingPopularEvents.map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setBannerIndex(idx)}
-                  className={`rounded-full transition ${
-                    idx === bannerIndex ? "bg-white w-8 h-3" : "bg-white/50 w-3 h-3"
-                  }`}
-                />
-              ))}
-            </div>
-          </>
+      {/* Grid */}
+      <div className="max-w-6xl mx-auto px-5 py-12">
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="w-10 h-10 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="text-center py-20">
+            <p className="text-5xl mb-4">🎟</p>
+            <p className="text-zinc-500 text-sm tracking-widest uppercase">No events found</p>
+          </div>
         ) : (
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
-            <div className="text-center text-white">
-              <h1 className="text-5xl md:text-7xl font-black mb-4">Discover Events</h1>
-              <p className="text-lg md:text-xl mb-8">Find and attend the best events happening around you</p>
-              <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-8 py-4 rounded-full font-bold text-lg hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:scale-105">
-                Explore Events
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filtered.map(event => {
+              const status = getStatus(event.date);
+              const statusMap = {
+                ongoing:  { cls: "text-emerald-400 bg-emerald-400/10 border-emerald-400/25", dot: "bg-emerald-400 animate-pulse", label: "Live" },
+                upcoming: { cls: "text-sky-400 bg-sky-400/10 border-sky-400/25",             dot: "bg-sky-400",                   label: "Upcoming" },
+                past:     { cls: "text-zinc-500 bg-zinc-800 border-zinc-700",                dot: "bg-zinc-600",                  label: "Ended" },
+              };
+              const s = statusMap[status];
+              return (
+                <div key={event._id} className="relative group">
+                  <Link to={`/events/${event._id}`} className="block">
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-600 transition-all duration-300 hover:shadow-xl hover:shadow-black/50 hover:-translate-y-1">
+                      {/* Image */}
+                      <div className="relative h-52 bg-zinc-800 overflow-hidden">
+                        {event.image ? (
+                          <img src={event.image} alt={event.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-6xl bg-gradient-to-br from-zinc-800 to-zinc-900">🎟</div>
+                        )}
+                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-transparent to-transparent" />
 
-      {/* Main Content */}
-      <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "48px 24px" }}>
-        {/* Ongoing Events Carousel */}
-        {!loading && ongoingEvents.length > 0 && (
-          <div className="mb-16">
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">🔴 Featured Events</h2>
-              <p className="text-gray-600">Discover upcoming and past events</p>
-            </div>
-            <EventCarousel events={ongoingEvents} />
-          </div>
-        )}
+                        {/* Status badge */}
+                        <div className="absolute top-3 left-3">
+                          <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border backdrop-blur-sm ${s.cls}`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
+                            {s.label}
+                          </span>
+                        </div>
 
-        {/* Blogs & Comments Carousel */}
-        {!blogsLoading && blogs.length > 0 && (
-          <div className="mb-16">
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">📰 Latest Blogs & Comments</h2>
-              <p className="text-gray-600">What the community is saying about events</p>
-            </div>
-            <BlogCarousel blogs={blogs} />
-          </div>
-        )}
+                        {/* Price badge */}
+                        <div className="absolute top-3 right-3">
+                          <span className={`text-xs font-black px-3 py-1 rounded-full backdrop-blur-sm ${event.price === 0 ? "bg-emerald-400/20 text-emerald-400 border border-emerald-400/25" : "bg-amber-400/20 text-amber-400 border border-amber-400/25"}`}>
+                            {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
+                          </span>
+                        </div>
+                      </div>
 
-        {/* Popular Events */}
-        {popularEvents.length > 0 && (
-          <div className="mb-16">
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">🔥 Popular Events</h2>
-              <p className="text-gray-600">Most attended events by the community</p>
-            </div>
-            <EventCarousel events={popularEvents} />
-          </div>
-        )}
+                      {/* Content */}
+                      <div className="p-5">
+                        <h2 className="font-black text-white text-base mb-2 line-clamp-1">{event.title}</h2>
+                        <p className="text-zinc-500 text-xs mb-1">📍 {event.location}</p>
+                        <p className="text-zinc-600 text-xs mb-4">📅 {new Date(event.date).toDateString()}</p>
 
-        {/* Events by Location */}
-        {Object.keys(eventsByLocation).length > 0 && (
-          <div className="mb-16">
-            <div className="mb-6">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">📍 Events by Location</h2>
-              <p className="text-gray-600">Find events happening near you</p>
-            </div>
-            <div className="space-y-12">
-              {Object.entries(eventsByLocation).slice(0, 3).map(([location, locEvents]) => (
-                <div key={location}>
-                  <h3 className="text-xl font-semibold text-gray-800 mb-4">Events in {location}</h3>
-                  <EventCarousel events={locEvents} />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Event Categories */}
-        <div className="mb-16">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">🏷️ Event Categories</h2>
-            <p className="text-gray-600">Browse events by type and availability</p>
-          </div>
-
-          {/* Category Tabs */}
-          <div className="flex flex-wrap gap-2 mb-8">
-            <button className="px-4 py-2 bg-blue-100 text-blue-700 rounded-full text-sm font-medium hover:bg-blue-200 transition">
-              Free Events ({freeEvents.length})
-            </button>
-            <button className="px-4 py-2 bg-green-100 text-green-700 rounded-full text-sm font-medium hover:bg-green-200 transition">
-              Paid Events ({paidEvents.length})
-            </button>
-            <button className="px-4 py-2 bg-purple-100 text-purple-700 rounded-full text-sm font-medium hover:bg-purple-200 transition">
-              Upcoming ({upcomingEvents.length})
-            </button>
-            <button className="px-4 py-2 bg-orange-100 text-orange-700 rounded-full text-sm font-medium hover:bg-orange-200 transition">
-              Past Events ({pastEvents.length})
-            </button>
-          </div>
-
-          {/* Category Grids - Show Free Events by default */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {freeEvents.slice(0, 6).map(event => (
-              <div key={event._id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition-shadow">
-                <Link to={getEventLink(event)} className="block">
-                  {event.image ? (
-                    <img src={event.image} alt={event.title} className="w-full h-48 object-cover" />
-                  ) : (
-                    <div className="w-full h-48 bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-4xl">🎟</div>
-                  )}
-                  <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{event.title}</h3>
-                    <p className="text-sm text-gray-600 mb-2">📍 {event.location}</p>
-                    <p className="text-sm text-gray-500">{formatEventTimeShort(event.date, event.timezone || 'UTC')}</p>
-                    <div className="mt-3 flex justify-between items-center">
-                      <span className="text-green-600 font-semibold">Free</span>
-                      <span className="text-sm text-gray-500">{event.attendees.length} attending</span>
+                        {/* Capacity bar */}
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-amber-400 to-orange-400 rounded-full"
+                              style={{ width: `${Math.min((event.attendees.length / event.capacity) * 100, 100)}%` }} />
+                          </div>
+                          <span className="text-[10px] text-zinc-600 font-semibold">{event.attendees.length} going</span>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </Link>
-              </div>
-            ))}
-          </div>
-        </div>
+                  </Link>
 
-        {/* App Info Sections */}
-        <div className="mt-16">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Discover, attend, and connect at local events with our easy-to-use platform
-            </p>
-          </div>
-
-          <div className="grid gap-8 xl:grid-cols-3">
-            <div className="bg-white rounded-2xl shadow-sm p-8 text-center hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-3xl">🔍</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Discover Events</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Browse upcoming events in your area. Filter by date, location, and interests to find the perfect event for you.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm p-8 text-center hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-3xl">🎫</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">RSVP & Pay</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Securely RSVP to free events or purchase tickets. Get instant confirmation and event updates via email.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-sm p-8 text-center hover:shadow-lg transition-shadow">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="text-3xl">📸</span>
-              </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-3">Share & Connect</h3>
-              <p className="text-gray-600 leading-relaxed">
-                Post photos, leave comments, and connect with other attendees. Build lasting memories and community.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* FAQ Section */}
-        <div className="mt-16 bg-gray-50 rounded-3xl p-8 md:p-12">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Frequently Asked Questions</h2>
-            <p className="text-gray-600 max-w-2xl mx-auto">
-              Got questions? We've got answers. Learn more about using our event platform.
-            </p>
-          </div>
-
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">How do I find events near me?</h3>
-              <p className="text-gray-600">
-                Browse our events page to see all upcoming events. You can filter by location, date, and category to find events in your area.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Is it free to attend events?</h3>
-              <p className="text-gray-600">
-                Many events are free to attend, but some require ticket purchases. Check the event details for pricing and RSVP options.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">How do I RSVP for an event?</h3>
-              <p className="text-gray-600">
-                Click on any event to view details, then use the RSVP button. Free events require just a click, paid events use secure payment processing.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-xl p-6 shadow-sm">
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Can I share photos from events?</h3>
-              <p className="text-gray-600">
-                Yes! After RSVPing and checking in, you can post photos during the event. Photos are moderated to ensure a positive experience.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Contact Section */}
-        <div className="mt-16 text-center">
-          <div className="bg-white rounded-2xl shadow-sm p-8 md:p-12 max-w-2xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">Get In Touch</h2>
-            <p className="text-gray-600 mb-8">
-              Have questions about events or need help with your account? Our support team is here to help.
-            </p>
-            <div className="space-y-4 text-left max-w-md mx-auto">
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">📧</span>
-                <div>
-                  <p className="font-semibold text-gray-900">Email Support</p>
-                  <p className="text-gray-600">support@eventapp.com</p>
+                  {/* Admin hover buttons */}
+                  {isAdmin && (
+                    <div className="absolute top-14 right-3 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <button onClick={e => { e.preventDefault(); navigate(`/events/${event._id}/edit`); }}
+                        className="bg-zinc-900/90 backdrop-blur-sm border border-zinc-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold shadow hover:border-amber-400/50 hover:text-amber-400 transition-all">
+                        ✏️ Edit
+                      </button>
+                      <button onClick={e => { e.preventDefault(); setDeleteTarget(event); }}
+                        className="bg-zinc-900/90 backdrop-blur-sm border border-zinc-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold shadow hover:border-red-500/50 hover:text-red-400 transition-all">
+                        🗑️ Delete
+                      </button>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-2xl">📍</span>
-                <div>
-                  <p className="font-semibold text-gray-900">Location</p>
-                  <p className="text-gray-600">Lagos, Nigeria</p>
-                </div>
-              </div>
-            </div>
+              );
+            })}
           </div>
-        </div>
+        )}
       </div>
-</div>
+    </div>
   );
 }

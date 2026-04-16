@@ -2,47 +2,32 @@ import { useEffect, useState } from "react";
 import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 
-const StatCard = ({ icon, label, value, sub, color = "blue" }) => {
-  const colors = {
-    blue:   "bg-blue-50 text-blue-600",
-    green:  "bg-green-50 text-green-600",
-    purple: "bg-purple-50 text-purple-600",
-    orange: "bg-orange-50 text-orange-600",
-  };
-  return (
-    <div className="bg-white rounded-2xl shadow-sm p-6 flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl ${colors[color]}`}>
-        {icon}
-      </div>
-      <div>
-        <p className="text-2xl font-extrabold text-gray-800">{value}</p>
-        <p className="text-sm text-gray-500">{label}</p>
-        {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
-      </div>
-    </div>
-  );
+const STATUS_MAP = {
+  ongoing:  { label: "Live",     cls: "text-emerald-400 bg-emerald-400/10 border-emerald-400/25", dot: "bg-emerald-400", pulse: true },
+  upcoming: { label: "Upcoming", cls: "text-sky-400 bg-sky-400/10 border-sky-400/25",             dot: "bg-sky-400",     pulse: false },
+  past:     { label: "Ended",    cls: "text-zinc-500 bg-zinc-800 border-zinc-700",                dot: "bg-zinc-500",    pulse: false },
 };
 
-const StatusBadge = ({ status }) => {
-  const map = {
-    ongoing:  "bg-green-100 text-green-700",
-    upcoming: "bg-blue-100 text-blue-700",
-    past:     "bg-gray-100 text-gray-500",
-  };
+function StatusBadge({ status }) {
+  const s = STATUS_MAP[status] || STATUS_MAP.past;
   return (
-    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full capitalize ${map[status] || map.past}`}>
-      {status === "ongoing" && "🟢 "}{status}
+    <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border ${s.cls}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot} ${s.pulse ? "animate-pulse" : ""}`} />
+      {s.label}
     </span>
   );
-};
+}
 
-const getStatus = (date) => {
-  const now = new Date();
-  const d = new Date(date);
-  if (d < now) return "past";
-  if (d <= new Date(now.getTime() + 24 * 60 * 60 * 1000)) return "ongoing";
-  return "upcoming";
-};
+function StatCard({ icon, label, value, accent }) {
+  return (
+    <div className={`relative overflow-hidden rounded-2xl border p-6 bg-zinc-900 ${accent}`}>
+      <div className="absolute -right-3 -top-3 text-5xl opacity-10 select-none">{icon}</div>
+      <p className="text-3xl font-black text-white mb-1">{value}</p>
+      <p className="text-[10px] font-bold tracking-[0.25em] uppercase text-zinc-500">{label}</p>
+      <div className="mt-3 text-xl">{icon}</div>
+    </div>
+  );
+}
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
@@ -59,111 +44,90 @@ export default function AdminDashboard() {
   }, []);
 
   const handleDelete = async (eventId) => {
-    const confirmed = window.confirm("Delete this event permanently? This cannot be undone.");
-    if (!confirmed) return;
-
+    if (!window.confirm("Move this event to trash?")) return;
     try {
       setDeletingId(eventId);
       await API.delete(`/events/${eventId}`);
       setStats(prev => {
         if (!prev) return prev;
-        const ongoingEvents = prev.ongoingEvents.filter(e => e._id !== eventId);
-        const upcomingEvents = prev.upcomingEvents.filter(e => e._id !== eventId);
-        const pastEvents = prev.pastEvents.filter(e => e._id !== eventId);
-        return {
-          ...prev,
-          ongoingEvents,
-          upcomingEvents,
-          pastEvents,
-          ongoing: ongoingEvents.length,
-          upcoming: upcomingEvents.length,
-          past: pastEvents.length,
-          totalEvents: ongoingEvents.length + upcomingEvents.length + pastEvents.length,
-        };
+        const f = arr => arr.filter(e => e._id !== eventId);
+        const o = f(prev.ongoingEvents), u = f(prev.upcomingEvents), p = f(prev.pastEvents);
+        return { ...prev, ongoingEvents: o, upcomingEvents: u, pastEvents: p,
+          ongoing: o.length, upcoming: u.length, past: p.length,
+          totalEvents: o.length + u.length + p.length };
       });
-    } catch (err) {
-      alert(err.response?.data?.message || "Failed to delete event.");
-    } finally {
-      setDeletingId(null);
-    }
+    } catch (err) { alert(err.response?.data?.message || "Failed"); }
+    finally { setDeletingId(null); }
   };
 
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-10 h-10 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+        <p className="text-zinc-600 text-xs tracking-widest uppercase">Loading</p>
+      </div>
     </div>
   );
-
   if (!stats) return null;
 
-  const allEvents = [
+  const all = [
     ...stats.ongoingEvents.map(e => ({ ...e, status: "ongoing" })),
     ...stats.upcomingEvents.map(e => ({ ...e, status: "upcoming" })),
     ...stats.pastEvents.map(e => ({ ...e, status: "past" })),
   ];
-
-  const filtered = tab === "all" ? allEvents
-    : allEvents.filter(e => e.status === tab);
+  const filtered = tab === "all" ? all : all.filter(e => e.status === tab);
 
   return (
-    <div className="min-h-screen bg-gray-50 py-10 px-4">
-      <div className="max-w-6xl mx-auto">
+    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <div className="h-px w-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
 
+      <div className="max-w-7xl mx-auto px-5 py-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
           <div>
-            <h1 className="text-3xl font-extrabold text-gray-800">Admin Dashboard</h1>
-            <p className="text-gray-500 text-sm mt-1">Platform overview and event management</p>
+            <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-2">Control Center</p>
+            <h1 className="text-5xl font-black leading-none tracking-tight">Admin</h1>
+            <p className="text-zinc-600 text-sm mt-1">Platform overview & management</p>
           </div>
-          <div className="flex gap-3 flex-wrap">
-            <Link to="/"
-              className="border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
-              📚 All Events
-            </Link>
-            <Link to="/trash"
-              className="border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
-              🗑️ Trash
-            </Link>
-            <Link to="/create"
-              className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition">
-              + New Event
-            </Link>
+          <div className="flex gap-2 flex-wrap">
+            <Link to="/" className="px-4 py-2 rounded-xl border border-zinc-800 text-zinc-400 text-sm hover:border-zinc-600 hover:text-white transition-all">📚 Events</Link>
+            <Link to="/trash" className="px-4 py-2 rounded-xl border border-zinc-800 text-zinc-400 text-sm hover:border-red-500/40 hover:text-red-400 transition-all">🗑️ Trash</Link>
+            <Link to="/create" className="px-5 py-2 rounded-xl bg-amber-400 text-zinc-950 text-sm font-bold hover:bg-amber-300 transition-all">+ New Event</Link>
           </div>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <StatCard icon="🎟" label="Total Events"   value={stats.totalEvents}   color="blue" />
-          <StatCard icon="👥" label="Total Users"    value={stats.totalUsers}    color="purple" />
-          <StatCard icon="🎫" label="Active Tickets" value={stats.totalTickets}  color="green" />
-          <StatCard icon="💰" label="Total Revenue"
-            value={`₦${stats.totalRevenue.toLocaleString()}`} color="orange" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <StatCard icon="🎟" label="Total Events"   value={stats.totalEvents}                         accent="border-amber-500/20" />
+          <StatCard icon="👥" label="Total Users"    value={stats.totalUsers}                          accent="border-sky-500/20" />
+          <StatCard icon="🎫" label="Active Tickets" value={stats.totalTickets}                        accent="border-emerald-500/20" />
+          <StatCard icon="💰" label="Revenue"         value={`₦${stats.totalRevenue.toLocaleString()}`} accent="border-rose-500/20" />
         </div>
 
-        {/* Status summary pills */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
+        {/* Event status pills */}
+        <div className="grid grid-cols-3 gap-3 mb-6">
           {[
-            { label: "Ongoing",  value: stats.ongoing,  color: "bg-green-500",  tab: "ongoing"  },
-            { label: "Upcoming", value: stats.upcoming, color: "bg-blue-500",   tab: "upcoming" },
-            { label: "Past",     value: stats.past,     color: "bg-gray-400",   tab: "past"     },
+            { key: "ongoing",  label: "Live Now",  value: stats.ongoing  },
+            { key: "upcoming", label: "Upcoming",  value: stats.upcoming },
+            { key: "past",     label: "Ended",     value: stats.past     },
           ].map(s => (
-            <button key={s.tab} onClick={() => setTab(s.tab)}
-              className={`bg-white rounded-2xl shadow-sm p-5 text-center hover:shadow-md transition border-2 ${tab === s.tab ? "border-blue-500" : "border-transparent"}`}>
-              <div className={`w-3 h-3 rounded-full ${s.color} mx-auto mb-2`} />
-              <p className="text-2xl font-extrabold text-gray-800">{s.value}</p>
-              <p className="text-sm text-gray-500">{s.label} Events</p>
+            <button key={s.key} onClick={() => setTab(s.key)}
+              className={`rounded-xl border p-4 text-center transition-all hover:scale-[1.01] ${
+                tab === s.key ? "border-amber-400/40 bg-amber-400/5" : "border-zinc-800 bg-zinc-900 hover:border-zinc-700"}`}>
+              <p className="text-2xl font-black">{s.value}</p>
+              <p className="text-[10px] tracking-widest uppercase text-zinc-500 mt-0.5">{s.label}</p>
             </button>
           ))}
         </div>
 
-        {/* Events table */}
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b">
-            <h2 className="font-bold text-gray-800">Events</h2>
-            <div className="flex gap-2">
+        {/* Table */}
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800">
+            <h2 className="font-bold text-sm tracking-wide">Events</h2>
+            <div className="flex gap-1 bg-zinc-800 rounded-lg p-1">
               {["all", "ongoing", "upcoming", "past"].map(t => (
                 <button key={t} onClick={() => setTab(t)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium capitalize transition ${tab === t ? "bg-blue-600 text-white" : "text-gray-500 hover:bg-gray-100"}`}>
+                  className={`px-3 py-1 rounded-md text-[11px] font-bold capitalize transition-all ${tab === t ? "bg-amber-400 text-zinc-950" : "text-zinc-500 hover:text-white"}`}>
                   {t}
                 </button>
               ))}
@@ -171,66 +135,58 @@ export default function AdminDashboard() {
           </div>
 
           {filtered.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
+            <div className="text-center py-20">
               <p className="text-4xl mb-3">📭</p>
-              <p>No {tab === "all" ? "" : tab} events found</p>
+              <p className="text-zinc-600 text-xs tracking-widest uppercase">No events found</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="text-xs text-gray-400 uppercase tracking-wider border-b">
-                    <th className="text-left px-6 py-3">Event</th>
-                    <th className="text-left px-6 py-3">Date</th>
-                    <th className="text-left px-6 py-3">Organizer</th>
-                    <th className="text-left px-6 py-3">Attendees</th>
-                    <th className="text-left px-6 py-3">Price</th>
-                    <th className="text-left px-6 py-3">Status</th>
-                    <th className="text-left px-6 py-3">Actions</th>
+                  <tr className="text-[10px] tracking-widest uppercase text-zinc-600 border-b border-zinc-800">
+                    {["Event", "Date", "Organizer", "Seats", "Price", "Status", "Actions"].map(h => (
+                      <th key={h} className="text-left px-5 py-3">{h}</th>
+                    ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
-                  {filtered.map(event => (
-                    <tr key={event._id} className="hover:bg-gray-50 transition">
-                      <td className="px-6 py-4">
+                <tbody>
+                  {filtered.map(ev => (
+                    <tr key={ev._id} className="border-b border-zinc-800/50 hover:bg-white/[0.02] transition-colors">
+                      <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                            {event.image
-                              ? <img src={event.image} alt="" className="w-full h-full object-cover" />
-                              : <div className="w-full h-full flex items-center justify-center text-lg">🎟</div>}
+                          <div className="w-9 h-9 rounded-lg overflow-hidden bg-zinc-800 flex-shrink-0 ring-1 ring-white/5">
+                            {ev.image ? <img src={ev.image} alt="" className="w-full h-full object-cover" />
+                              : <div className="w-full h-full flex items-center justify-center text-sm">🎟</div>}
                           </div>
-                          <p className="font-semibold text-gray-800 text-sm line-clamp-1">{event.title}</p>
+                          <span className="text-sm font-semibold text-white line-clamp-1 max-w-[160px]">{ev.title}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {new Date(event.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                      <td className="px-5 py-3.5 text-sm text-zinc-500">
+                        {new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-500">
-                        {event.createdBy?.name || "—"}
+                      <td className="px-5 py-3.5 text-sm text-zinc-500">{ev.createdBy?.name || "—"}</td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <div className="w-14 h-1 bg-zinc-700 rounded-full overflow-hidden">
+                            <div className="h-full bg-amber-400 rounded-full transition-all"
+                              style={{ width: `${Math.min(((ev.attendees?.length ?? 0) / ev.capacity) * 100, 100)}%` }} />
+                          </div>
+                          <span className="text-[11px] text-zinc-600">{ev.attendees?.length ?? 0}/{ev.capacity}</span>
+                        </div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-600 font-medium">
-                        {event.attendees?.length ?? 0} / {event.capacity}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-semibold">
-                        <span className={event.price === 0 ? "text-green-600" : "text-blue-600"}>
-                          {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
+                      <td className="px-5 py-3.5">
+                        <span className={`text-sm font-bold ${ev.price === 0 ? "text-emerald-400" : "text-amber-400"}`}>
+                          {ev.price === 0 ? "Free" : `₦${ev.price.toLocaleString()}`}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <StatusBadge status={event.status} />
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-wrap gap-2">
-                          <Link to={`/events/${event._id}`}
-                            className="text-xs text-blue-600 hover:underline font-medium">View</Link>
-                          <Link to={`/events/${event._id}/edit`}
-                            className="text-xs text-gray-500 hover:underline font-medium">Edit</Link>
-                          <button
-                            onClick={() => handleDelete(event._id)}
-                            disabled={deletingId === event._id}
-                            className="text-xs text-red-600 hover:underline font-medium disabled:opacity-50"
-                          >
-                            {deletingId === event._id ? "Deleting…" : "Delete"}
+                      <td className="px-5 py-3.5"><StatusBadge status={ev.status} /></td>
+                      <td className="px-5 py-3.5">
+                        <div className="flex gap-3 text-xs font-semibold">
+                          <Link to={`/events/${ev._id}`} className="text-sky-400 hover:text-sky-300 transition-colors">View</Link>
+                          <Link to={`/events/${ev._id}/edit`} className="text-zinc-400 hover:text-white transition-colors">Edit</Link>
+                          <button onClick={() => handleDelete(ev._id)} disabled={deletingId === ev._id}
+                            className="text-red-500 hover:text-red-400 transition-colors disabled:opacity-30">
+                            {deletingId === ev._id ? "…" : "Delete"}
                           </button>
                         </div>
                       </td>

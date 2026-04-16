@@ -23,83 +23,77 @@ export default function EventSummary() {
 
   useEffect(() => {
     if (!event) return;
-    if (!isPastEvent(event.date)) {
-      navigate(`/events/${id}`, { replace: true });
-    }
+    if (!isPastEvent(event.date)) navigate(`/events/${id}`, { replace: true });
   }, [event, id, navigate]);
 
-  if (!event) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-500">Loading event summary...</p>
-        </div>
-      </div>
-    );
-  }
+  if (!event) return (
+    <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
+      <div className="w-10 h-10 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
+    </div>
+  );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="w-full h-72 md:h-96 bg-gradient-to-br from-blue-600 to-indigo-700 relative overflow-hidden">
+    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+      {/* Hero */}
+      <div className="relative h-72 md:h-[420px] overflow-hidden">
         {event.image ? (
-          <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+          <img src={event.image} alt={event.title} className="w-full h-full object-cover grayscale-[30%]" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-8xl">🎟</div>
+          <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-8xl">🎟</div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-        <div className="absolute top-6 left-6 right-6 flex flex-col gap-3">
-          <div className="inline-flex items-center gap-2 bg-white/10 text-white px-4 py-2 rounded-full text-sm font-semibold tracking-wide">
-            <span>✅ Event Ended</span>
+        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/60 to-zinc-950/20" />
+        <div className="absolute bottom-0 left-0 right-0 p-8">
+          <div className="inline-flex items-center gap-2 bg-zinc-800/80 backdrop-blur-sm border border-zinc-700 text-zinc-400 text-xs font-bold tracking-widest uppercase px-4 py-2 rounded-full mb-4">
+            ✅ Event Ended
           </div>
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white max-w-3xl">{event.title}</h1>
-          <p className="max-w-2xl text-sm md:text-base text-blue-100">
-            This event has finished. Here is the full recap, gallery, and everything that happened.
+          <h1 className="text-4xl md:text-5xl font-black leading-tight max-w-3xl">{event.title}</h1>
+          <p className="text-zinc-500 text-sm mt-2 max-w-xl">
+            This event has finished. Here's the full recap, gallery, and highlights.
           </p>
         </div>
       </div>
 
-      <div className="max-w-5xl mx-auto px-4 py-10">
+      <div className="max-w-5xl mx-auto px-5 py-10">
         {message && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-6 text-sm">
-            {message}
-          </div>
+          <div className="bg-red-500/10 border border-red-500/25 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">{message}</div>
         )}
 
-        <div className="bg-white rounded-2xl shadow-sm p-8 mb-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        {/* Summary card */}
+        <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
             <div>
-              <p className="text-sm uppercase tracking-widest text-gray-500 mb-2">Event summary</p>
-              <h2 className="text-3xl font-bold text-gray-900">{event.title}</h2>
+              <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-1">Event Recap</p>
+              <h2 className="text-3xl font-black">{event.title}</h2>
             </div>
-            <Link to="/" className="inline-flex items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 transition">
-              ← Back to all events
+            <Link to="/"
+              className="inline-flex items-center justify-center bg-zinc-800 border border-zinc-700 text-zinc-300 px-5 py-2.5 rounded-xl text-sm font-bold hover:border-zinc-500 hover:text-white transition-all self-start md:self-auto">
+              ← All Events
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
+            <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-4 text-center">
               <p className="text-2xl mb-1">📍</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Location</p>
-              <p className="text-gray-800 font-semibold mt-1">{event.location}</p>
+              <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-1">Location</p>
+              <p className="text-white font-bold text-sm">{event.location}</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
+            <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-4 text-center">
               <p className="text-2xl mb-1">📅</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Date & Time</p>
-              <p className="text-gray-800 font-semibold mt-1 text-sm">{formatEventTime(event.date, event.timezone || 'UTC')}</p>
-              <p className="text-xs text-gray-500 mt-2">Your time: {formatEventTime(event.date, getUserTimezone())}</p>
+              <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-1">Date & Time</p>
+              <p className="text-white font-bold text-sm">{formatEventTime(event.date, event.timezone || "UTC")}</p>
+              <p className="text-zinc-600 text-xs mt-1">Your time: {formatEventTime(event.date, getUserTimezone())}</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-4 text-center">
+            <div className="bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-4 text-center">
               <p className="text-2xl mb-1">👥</p>
-              <p className="text-xs text-gray-500 uppercase tracking-wide font-medium">Attendees</p>
-              <p className="text-gray-800 font-semibold mt-1">{event.attendees.length} / {event.capacity}</p>
+              <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-1">Attendees</p>
+              <p className="text-white font-bold text-sm">{event.attendees.length} / {event.capacity}</p>
             </div>
           </div>
 
-          <div className="border-t pt-6 mt-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-3">About this event</h2>
-            <p className="text-gray-600 leading-relaxed whitespace-pre-line">{event.description}</p>
-            <div className="mt-6 space-y-4">
+          <div className="border-t border-zinc-800 pt-6">
+            <h2 className="font-black text-white text-lg mb-3">About</h2>
+            <p className="text-zinc-400 leading-relaxed whitespace-pre-line text-sm">{event.description}</p>
+            <div className="mt-6">
               <GetDirections venue={event.venue} location={event.location} />
             </div>
           </div>
@@ -107,20 +101,12 @@ export default function EventSummary() {
 
         <EventInsights event={event} />
 
-        <div className="mt-10">
-          <EventPosts
-            eventId={id}
-            user={user}
-            readOnly
-          />
+        <div className="mt-8">
+          <EventPosts eventId={id} user={user} readOnly />
         </div>
 
-        <div className="mt-10">
-          <EventComments
-            eventId={id}
-            user={user}
-            comments={event.comments || []}
-          />
+        <div className="mt-8">
+          <EventComments eventId={id} user={user} comments={event.comments || []} />
         </div>
       </div>
     </div>
