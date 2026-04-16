@@ -32,13 +32,13 @@ body {
 }
 
 h1  {
-  color: #111827;
+  color: #f3ffd8;
   font-weight: 700;
 }
 
 h2, h3, h4, h5, h6
 {
-  color: #434b06;
+  color: #a4b905;
   font-weight: 600;
 }
 input, textarea, select {

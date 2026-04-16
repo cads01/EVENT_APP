@@ -37,7 +37,7 @@ export default function Login() {
       {/* Right Panel */}
       <div className="w-full md:w-1/2 flex items-center justify-center bg-white px-8">
         <div className="w-full max-w-md">
-          <h1 className="text-4xl font-extrabold text-gray-900 mb-2">Welcome back 👋</h1>
+          <h2 className="text-4xl font-extrabold text-gray-900 mb-2">Welcome back 👋</h2>
           <p className="text-gray-500 mb-8">Login to your EventApp account</p>
 
           {error && (
