@@ -16,6 +16,7 @@ export default function EventCarousel({ events = [] }) {
   if (events.length === 0) return null;
 
   const current = events[currentIndex];
+  console.log('Carousel current event ID:', current?._id, 'Index:', currentIndex, 'Total events:', events.length);
 
   const goToPrevious = () => {
     setCurrentIndex((prev) => (prev - 1 + events.length) % events.length);
