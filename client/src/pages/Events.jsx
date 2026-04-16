@@ -76,8 +76,8 @@ export default function Events() {
   return (
     <div style={{ minHeight: "100vh", backgroundColor: "#f9fafb" }}>
       <h1>Test - Events Page</h1>
-    </div>
-  );
+    
+
 
       {/* Grid */}
       <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "48px 24px" }}>
@@ -288,6 +288,6 @@ export default function Events() {
           </div>
         </div>
       </div>
-    </div>
+</div>
   );
 }
