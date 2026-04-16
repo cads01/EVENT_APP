@@ -14,17 +14,19 @@ export default function Events() {
   const [blogsLoading, setBlogsLoading] = useState(true);
   const [deleteTarget, setDeleteTarget] = useState(null); // event to confirm delete
   const [deleting, setDeleting] = useState(false);
+  const [bannerIndex, setBannerIndex] = useState(0);
   const { user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
 
   const getEventLink = (event) =>
     isPastEvent(event.date) ? `/events/${event._id}/summary` : `/events/${event._id}`;
-  const popularOngoingEvents = events
-    .filter(e => new Date(e.date) >= new Date() && e.attendees.length > 0)
+  
+  const upcomingPopularEvents = events
+    .filter(e => new Date(e.date) > new Date() && e.attendees.length > 0)
     .sort((a, b) => b.attendees.length - a.attendees.length);
 
-  const featuredEvent = popularOngoingEvents[0];
+  const featuredEvent = upcomingPopularEvents[bannerIndex] || upcomingPopularEvents[0];
 
   const popularEvents = events
     .filter(e => e.attendees.length > 0)
@@ -68,6 +70,15 @@ export default function Events() {
       .finally(() => setBlogsLoading(false));
   }, []);
 
+  // Auto-rotate banner
+  useEffect(() => {
+    if (upcomingPopularEvents.length === 0) return;
+    const interval = setInterval(() => {
+      setBannerIndex((prev) => (prev + 1) % upcomingPopularEvents.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [upcomingPopularEvents.length]);
+
   const handleDelete = async () => {
     if (!deleteTarget) return;
     try {
@@ -83,7 +94,7 @@ export default function Events() {
   };
 
   return (
-    <div style={{ minHeight: "100vh", backgroundColor: "#f9fafb" }}>
+    <div style={{ minHeight: "100vh", backgroundColor: "var(--bg)" }}>
       {/* Delete confirmation modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
@@ -113,32 +124,89 @@ export default function Events() {
         </div>
       )}
 
-      {/* Hero Banner */}
-      <div className="relative h-96 flex items-center justify-center overflow-hidden bg-gradient-to-br from-blue-600 to-indigo-700">
-        <div className="text-center px-4 max-w-4xl mx-auto text-white">
-          {featuredEvent ? (
-            <>
+      {/* Hero Banner - Full Screen Slideshow */}
+      <div className="relative h-screen flex items-center justify-center overflow-hidden">
+        {upcomingPopularEvents.length > 0 ? (
+          <>
+            {/* Background Images */}
+            {upcomingPopularEvents.map((event, idx) => (
+              <div
+                key={event._id}
+                className={`absolute inset-0 transition-opacity duration-1000 ${
+                  idx === bannerIndex ? "opacity-100" : "opacity-0"
+                }`}
+              >
+                {event.image ? (
+                  <img
+                    src={event.image}
+                    alt={event.title}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-9xl">🎟</div>
+                )}
+              </div>
+            ))}
+            
+            {/* Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-black/30" />
+
+            {/* Content */}
+            <div className="relative z-10 text-center px-4 max-w-4xl mx-auto text-white">
               <span className="inline-block bg-yellow-500/20 text-yellow-300 px-4 py-2 rounded-full text-sm font-semibold mb-4">
-                🔥 Featured Event
+                🔥 Upcoming Featured Event
               </span>
-              <h1 className="text-3xl md:text-5xl font-black mb-3">{featuredEvent.title}</h1>
-              <div className="flex flex-wrap justify-center gap-4 text-blue-100 mb-6">
+              <h1 className="text-5xl md:text-7xl font-black mb-6 tracking-tight">{featuredEvent.title}</h1>
+              <div className="flex flex-wrap justify-center gap-6 text-lg md:text-xl mb-8 font-light">
                 <span>📍 {featuredEvent.location}</span>
                 <span>📅 {formatEventTimeShort(featuredEvent.date, featuredEvent.timezone || 'UTC')}</span>
                 <span>👥 {featuredEvent.attendees.length} attending</span>
               </div>
-            </>
-          ) : (
-            <>
-              <h1 className="text-4xl md:text-6xl font-black mb-4">Discover Events</h1>
-              <p className="text-lg md:text-xl mb-6">Find and attend the best events happening around you</p>
-            </>
-          )}
-          <Link to={featuredEvent ? getEventLink(featuredEvent) : "#"} 
-            className="inline-block bg-yellow-500 text-black px-6 py-3 rounded-full font-semibold hover:bg-yellow-600">
-            {featuredEvent ? "View Event" : "Explore Events"}
-          </Link>
-        </div>
+              <Link to={getEventLink(featuredEvent)} 
+                className="inline-block bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-8 py-4 rounded-full font-bold text-lg hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:scale-105 shadow-xl">
+                View Event Details →
+              </Link>
+            </div>
+
+            {/* Navigation Arrows */}
+            <button
+              onClick={() => setBannerIndex((prev) => (prev - 1 + upcomingPopularEvents.length) % upcomingPopularEvents.length)}
+              className="absolute left-6 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white rounded-full w-14 h-14 flex items-center justify-center transition backdrop-blur-sm text-3xl font-bold"
+            >
+              ‹
+            </button>
+            <button
+              onClick={() => setBannerIndex((prev) => (prev + 1) % upcomingPopularEvents.length)}
+              className="absolute right-6 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white rounded-full w-14 h-14 flex items-center justify-center transition backdrop-blur-sm text-3xl font-bold"
+            >
+              ›
+            </button>
+
+            {/* Indicators */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+              {upcomingPopularEvents.map((_, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => setBannerIndex(idx)}
+                  className={`rounded-full transition ${
+                    idx === bannerIndex ? "bg-white w-8 h-3" : "bg-white/50 w-3 h-3"
+                  }`}
+                />
+              ))}
+            </div>
+          </>
+        ) : (
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center">
+            <div className="text-center text-white">
+              <h1 className="text-5xl md:text-7xl font-black mb-4">Discover Events</h1>
+              <p className="text-lg md:text-xl mb-8">Find and attend the best events happening around you</p>
+              <button className="bg-gradient-to-r from-yellow-500 to-orange-500 text-black px-8 py-4 rounded-full font-bold text-lg hover:from-yellow-600 hover:to-orange-600 transition-all transform hover:scale-105">
+                Explore Events
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}

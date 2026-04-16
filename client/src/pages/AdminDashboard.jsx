@@ -48,6 +48,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState("all");
+  const [deletingId, setDeletingId] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -56,6 +57,36 @@ export default function AdminDashboard() {
       .catch(() => navigate("/"))
       .finally(() => setLoading(false));
   }, []);
+
+  const handleDelete = async (eventId) => {
+    const confirmed = window.confirm("Delete this event permanently? This cannot be undone.");
+    if (!confirmed) return;
+
+    try {
+      setDeletingId(eventId);
+      await API.delete(`/events/${eventId}`);
+      setStats(prev => {
+        if (!prev) return prev;
+        const ongoingEvents = prev.ongoingEvents.filter(e => e._id !== eventId);
+        const upcomingEvents = prev.upcomingEvents.filter(e => e._id !== eventId);
+        const pastEvents = prev.pastEvents.filter(e => e._id !== eventId);
+        return {
+          ...prev,
+          ongoingEvents,
+          upcomingEvents,
+          pastEvents,
+          ongoing: ongoingEvents.length,
+          upcoming: upcomingEvents.length,
+          past: pastEvents.length,
+          totalEvents: ongoingEvents.length + upcomingEvents.length + pastEvents.length,
+        };
+      });
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to delete event.");
+    } finally {
+      setDeletingId(null);
+    }
+  };
 
   if (loading) return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -84,7 +115,11 @@ export default function AdminDashboard() {
             <h1 className="text-3xl font-extrabold text-gray-800">Admin Dashboard</h1>
             <p className="text-gray-500 text-sm mt-1">Platform overview and event management</p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap">
+            <Link to="/"
+              className="border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
+              📚 All Events
+            </Link>
             <Link to="/trash"
               className="border border-gray-200 text-gray-600 px-4 py-2 rounded-xl text-sm font-medium hover:bg-gray-50 transition">
               🗑️ Trash
@@ -185,11 +220,18 @@ export default function AdminDashboard() {
                         <StatusBadge status={event.status} />
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex gap-2">
+                        <div className="flex flex-wrap gap-2">
                           <Link to={`/events/${event._id}`}
                             className="text-xs text-blue-600 hover:underline font-medium">View</Link>
                           <Link to={`/events/${event._id}/edit`}
                             className="text-xs text-gray-500 hover:underline font-medium">Edit</Link>
+                          <button
+                            onClick={() => handleDelete(event._id)}
+                            disabled={deletingId === event._id}
+                            className="text-xs text-red-600 hover:underline font-medium disabled:opacity-50"
+                          >
+                            {deletingId === event._id ? "Deleting…" : "Delete"}
+                          </button>
                         </div>
                       </td>
                     </tr>

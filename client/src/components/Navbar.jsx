@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
-export default function Navbar() {
+export default function Navbar({ theme, toggleTheme }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -12,8 +12,8 @@ export default function Navbar() {
 
   return (
     <nav style={{
-      backgroundColor: "white",
-      borderBottom: "1px solid #e5e7eb",
+      backgroundColor: "var(--surface)",
+      borderBottom: "1px solid var(--border)",
       padding: "0 24px",
       height: "64px",
       display: "flex",
@@ -29,13 +29,21 @@ export default function Navbar() {
       </Link>
 
       <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <Link to="/" style={{ color: "var(--text)", fontSize: "14px", textDecoration: "none" }}>All Events</Link>
+        <button onClick={toggleTheme} style={{
+          border: "1px solid var(--border)",
+          backgroundColor: "transparent", color: "var(--text)",
+          padding: "8px 16px", borderRadius: "8px", fontSize: "14px", cursor: "pointer"
+        }}>
+          {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+        </button>
         {user ? (
           <>
-            <span style={{ fontSize: "14px", color: "#6b7280" }}>
-              Hi, <strong style={{ color: "#111827" }}>{user.name}</strong>
+            <span style={{ fontSize: "14px", color: "var(--muted)" }}>
+              Hi, <strong style={{ color: "var(--text)" }}>{user.name}</strong>
             </span>
             {user?.role === "admin" && <Link to="/admin">Admin</Link>}
-{["admin","organizer"].includes(user?.role) && <Link to="/dashboard">Dashboard</Link>}
+            {["admin","organizer"].includes(user?.role) && <Link to="/dashboard">Dashboard</Link>}
             {user.role === "admin" && (
               <Link to="/create" style={{
                 backgroundColor: "#2563eb", color: "white",

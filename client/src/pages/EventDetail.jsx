@@ -23,6 +23,7 @@ export default function EventDetail() {
   const [ticketStatus, setTicketStatus] = useState(null);
   const [showSpecialCodeModal, setShowSpecialCodeModal] = useState(false);
   const [specialCodeInput, setSpecialCodeInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const isAdmin = user?.role === "admin";
 
   const refreshEvent = () =>
@@ -131,8 +132,23 @@ export default function EventDetail() {
     }
   };
 
+  const handleDeleteEvent = async () => {
+    const confirmed = window.confirm("Are you sure you want to delete this event? This action cannot be undone.");
+    if (!confirmed) return;
+
+    try {
+      setDeleting(true);
+      await API.delete(`/events/${id}`);
+      navigate("/");
+    } catch (err) {
+      setMessage(err.response?.data?.message || "Failed to delete event.");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (!event) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
       <div className="text-center">
         <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
         <p className="text-gray-500">Loading event...</p>
@@ -141,7 +157,7 @@ export default function EventDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen" style={{ backgroundColor: "var(--bg)" }}>
 
       {/* Attendees modal */}
       {showAttendees && (
@@ -246,6 +262,11 @@ export default function EventDetail() {
             <button onClick={() => navigate(`/events/${id}/edit`)}
               className="bg-white/90 text-blue-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white transition">
               ✏️ Edit
+            </button>
+            <button onClick={handleDeleteEvent}
+              disabled={deleting}
+              className="bg-white/90 text-red-600 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white transition disabled:opacity-50">
+              {deleting ? "Deleting…" : "Delete"}
             </button>
             <button onClick={loadAttendees}
               className="bg-white/90 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white transition">
