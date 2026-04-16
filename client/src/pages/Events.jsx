@@ -2,6 +2,9 @@ import { useEffect, useState } from "react";
 import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import About from "../components/About";
+import FAQ from "../components/FAQ";
+import Contact from "../components/Contact";
 
 export default function Events() {
   const [events, setEvents] = useState([]);
@@ -199,6 +202,15 @@ export default function Events() {
           </div>
         )}
       </div>
+
+      {/* About Section */}
+      <About />
+
+      {/* FAQ Section */}
+      <FAQ />
+
+      {/* Contact Section */}
+      <Contact />
     </div>
   );
 }
