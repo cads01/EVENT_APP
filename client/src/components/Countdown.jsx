@@ -3,22 +3,33 @@ import { useState, useEffect } from "react";
 
 const pad = (n) => String(n).padStart(2, "0");
 
+const isSameCalendarDay = (dateA, dateB) =>
+  dateA.getFullYear() === dateB.getFullYear() &&
+  dateA.getMonth() === dateB.getMonth() &&
+  dateA.getDate() === dateB.getDate();
+
 export default function Countdown({ eventDate }) {
   const [timeLeft, setTimeLeft] = useState(null);
-  const [expired, setExpired] = useState(false);
+  const [status, setStatus] = useState("upcoming");
 
   useEffect(() => {
     const calculate = () => {
-      const diff = new Date(eventDate) - new Date();
-      if (diff <= 0) {
-        setExpired(true);
+      const now = new Date();
+      const event = new Date(eventDate);
+      const diff = event - now;
+
+      if (diff > 0) {
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        setTimeLeft({ days, hours, minutes, seconds });
+        setStatus("upcoming");
         return;
       }
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-      setTimeLeft({ days, hours, minutes, seconds });
+
+      setTimeLeft(null);
+      setStatus(isSameCalendarDay(event, now) ? "ongoing" : "past");
     };
 
     calculate();
@@ -26,11 +37,21 @@ export default function Countdown({ eventDate }) {
     return () => clearInterval(interval);
   }, [eventDate]);
 
-  if (expired) {
+  if (status === "ongoing") {
     return (
       <div className="text-center py-6">
         <span className="text-yellow-400 font-bold text-lg tracking-widest uppercase font-mono">
           🎉 This event is happening now!
+        </span>
+      </div>
+    );
+  }
+
+  if (status === "past") {
+    return (
+      <div className="text-center py-6">
+        <span className="text-gray-500 font-bold text-lg tracking-widest uppercase font-mono">
+          ⏳ This event has already ended.
         </span>
       </div>
     );

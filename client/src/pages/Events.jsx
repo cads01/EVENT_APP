@@ -23,15 +23,14 @@ export default function Events() {
     API.get("/events")
       .then(res => {
         setEvents(res.data);
-        
-        // Calculate ongoing events (within 24 hours)
+
+        // Calculate current and past events
         const now = new Date();
-        const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-        const upcoming = res.data.filter(e => {
+        const currentAndPast = res.data.filter(e => {
           const eventDate = new Date(e.date);
-          return eventDate >= now && eventDate <= tomorrow;
+          return eventDate <= now;
         });
-        setOngoingEvents(upcoming);
+        setOngoingEvents(currentAndPast);
       })
       .finally(() => setLoading(false));
 
@@ -134,8 +133,8 @@ export default function Events() {
         {!loading && ongoingEvents.length > 0 && (
           <div className="mb-16">
             <div className="mb-6">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">🔴 Ongoing Events</h2>
-              <p className="text-gray-600">Happening within the next 24 hours</p>
+              <h2 className="text-3xl font-bold text-gray-900 mb-2">🔴 Current & Past Events</h2>
+              <p className="text-gray-600">Showing events that are happening now or already took place</p>
             </div>
             <EventCarousel events={ongoingEvents} />
           </div>
