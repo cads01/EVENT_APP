@@ -158,7 +158,7 @@ export default function EventDetail() {
       {/* Content */}
       <div className="max-w-4xl mx-auto px-5 py-10">
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-4">
-          <h1 className="text-4xl font-black mb-8 leading-tight">{event.title}</h1>
+          <h2 className="text-4xl font-black mb-8 leading-tight">{event.title}</h2>
 
           {/* Info cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
