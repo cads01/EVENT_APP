@@ -33,6 +33,7 @@ export default function Events() {
           const eventDate = new Date(e.date);
           return eventDate <= now;
         });
+        console.log('All events:', res.data.length, 'Current & past events:', currentAndPast.length);
         setOngoingEvents(currentAndPast);
       })
       .finally(() => setLoading(false));
