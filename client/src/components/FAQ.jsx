@@ -34,9 +34,9 @@ export default function FAQ() {
     <div className="max-w-4xl mx-auto px-5 py-16">
       <div className="text-center mb-12">
         <p className="text-[10px] tracking-[0.4em] uppercase text-amber-400 font-bold mb-4">FAQ</p>
-        <h2 className="text-4xl md:text-5xl font-black text-white mb-4">
+        <h2 className="text-4xl md:text-5xl font-black mb-4">
           Frequently Asked<br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400">Questions</span>
+          <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-orange-400 drop-shadow-lg">Questions</span>
         </h2>
         <p className="text-zinc-500 text-base">Find answers to common questions about our platform</p>
       </div>
