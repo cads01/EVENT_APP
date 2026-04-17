@@ -79,7 +79,7 @@ export default function Events() {
         <div className="absolute inset-0 opacity-30"
           style={{ backgroundImage: "radial-gradient(circle at 20% 50%, #f59e0b33 0%, transparent 50%), radial-gradient(circle at 80% 20%, #0ea5e933 0%, transparent 50%)" }} />
         <div className="absolute inset-0"
-          style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
+          style={{ backgroundImage: "linear-gradient(rgba(255, 0, 0, 0.99) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)", backgroundSize: "60px 60px" }} />
         <div className="relative px-5 py-20 text-center max-w-3xl mx-auto">
           <p className="text-[10px] tracking-[0.4em] uppercase text-amber-400 font-bold mb-4">EventApp</p>
           <h1 className="text-5xl md:text-7xl font-black leading-none tracking-tight mb-4">
