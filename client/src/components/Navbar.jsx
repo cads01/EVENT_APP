@@ -13,7 +13,7 @@ export default function Navbar({ theme, toggleTheme }) {
   return (
     <nav style={{
       backgroundColor: "var(--surface-nav)",
-      borderBottom: "1px solid var(--border)",
+      borderBottom: "1px solid var(--border-nav)",
       padding: "0 24px",
       height: "64px",
       display: "flex",
