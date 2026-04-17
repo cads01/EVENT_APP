@@ -3,7 +3,7 @@
 :root {
   --bg: #f9fafb;
   --surface: #ffffff;
-  --surface-2: #f8fafc00;
+  --surface-2: #f8fafc;
   --text: #111827;
   --muted: #6b7280;
   --border: #e5e7eb;
@@ -12,6 +12,7 @@
 body.dark {
   --bg: #0f172a;
   --surface: #111827;
+  --surface-nav: #0f182e59;
   --surface-2: #1f2937;
   --text: #e2e8f0;
   --muted: #94a3b8;
