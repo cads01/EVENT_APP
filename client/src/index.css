@@ -3,7 +3,7 @@
 :root {
   --bg: #f9fafb;
   --surface: #ffffff;
-  --surface-2: #f8fafc;
+  --surface-2: #f8fafc00;
   --text: #111827;
   --muted: #6b7280;
   --border: #e5e7eb;
@@ -36,7 +36,11 @@ h1  {
   font-weight: 700;
 }
 
-h2, h3, h4, h5, h6
+h2 {
+  color: #030e31;
+  font-weight: 700;
+}
+h3, h4, h5, h6
 {
   color: #a4b905;
   font-weight: 600;
