@@ -6,60 +6,6 @@ import About from "../components/About";
 import FAQ from "../components/FAQ";
 import Contact from "../components/Contact";
 
-// ── Transparent sticky nav ──────────────────────────────────────────────────
-function Navbar({ user, isAdmin, events }) {
-  const [scrolled, setScrolled] = useState(false);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-      scrolled ? "bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-800/80" : "bg-transparent"
-    }`}>
-      <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-        <Link to="/" className={`font-black text-xl tracking-tight transition-colors duration-300 ${scrolled ? "text-white" : "text-white"}`}>
-          Event<span className="text-amber-400">App</span>
-        </Link>
-
-        <div className="flex items-center gap-2">
-          {user ? (
-            <>
-              {isAdmin && (
-                <Link to="/admin" className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
-                  Dashboard
-                </Link>
-              )}
-              {user.role === "organizer" && (
-                <Link to="/dashboard" className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
-                  My Events
-                </Link>
-              )}
-              {isAdmin && (
-                <Link to="/create" className="text-xs font-bold bg-amber-400 text-zinc-950 px-4 py-1.5 rounded-lg hover:bg-amber-300 transition-all">
-                  + Create
-                </Link>
-              )}
-            </>
-          ) : (
-            <>
-              <Link to="/login" className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/80 hover:text-white"}`}>
-                Login
-              </Link>
-              <Link to="/register" className="text-xs font-bold bg-amber-400 text-zinc-950 px-4 py-1.5 rounded-lg hover:bg-amber-300 transition-all">
-                Sign Up
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-    </nav>
-  );
-}
 
 // ── Auto-sliding carousel ────────────────────────────────────────────────────
 function Carousel({ events }) {
