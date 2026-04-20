@@ -43,10 +43,7 @@ export default function Navbar() {
 
           {/* Desktop links — centered */}
           <div className="hidden md:flex items-center gap-1">
-            <Link to="/"
-              className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
-              Events
-            </Link>
+         
             {user?.role === "admin" && (
               <Link to="/admin"
                 className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
@@ -71,6 +68,10 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
+                 <Link to="/"
+              className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
+              Events
+            </Link>
                 <span className={`text-xs transition-all ${scrolled ? "text-zinc-500" : "text-white/50"}`}>
                   {user.name}
                 </span>
