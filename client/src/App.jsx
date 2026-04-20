@@ -28,8 +28,9 @@ export default function App() {
   return (
     <>
       <Navbar />
+
       <Routes>
-        
+        <Route path="/" element={<Events />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/events/:id" element={<EventDetail />} />
