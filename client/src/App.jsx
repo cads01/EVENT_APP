@@ -27,7 +27,7 @@ export default function App() {
 
   return (
     <>
-
+      <Navbar theme={theme} toggleTheme={toggleTheme} />
       <Routes>
         <Route path="/" element={<Events />} />
         <Route path="/login" element={<Login />} />
