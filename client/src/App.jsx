@@ -27,7 +27,7 @@ export default function App() {
 
   return (
     <>
-
+      <Navbar />
       <Routes>
         <Route path="/" element={<Events />} />
         <Route path="/login" element={<Login />} />
