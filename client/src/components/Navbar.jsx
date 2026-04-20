@@ -36,10 +36,7 @@ export default function Navbar() {
         style={{ fontFamily: "'Syne', sans-serif" }}
       >
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          {/* Logo */}
-          <Link to="/" className="font-black text-xl tracking-tight text-white hover:opacity-80 transition-opacity">
-            Event<span className="text-amber-400">App</span>
-          </Link>
+          
 
           {/* Desktop links — centered */}
           <div className="hidden md:flex items-center gap-1">
@@ -68,6 +65,10 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
+              {/* Logo */}
+          <Link to="/" className="font-black text-xl tracking-tight text-white hover:opacity-80 transition-opacity">
+            Event<span className="text-amber-400">App</span>
+          </Link>
                  <Link to="/"
               className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
               Events
