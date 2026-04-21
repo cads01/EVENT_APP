@@ -9,7 +9,7 @@ export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 60);
+    const onScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
@@ -28,77 +28,63 @@ export default function Navbar() {
   return (
     <>
       <nav
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-400 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
-            ? "bg-zinc-950/90 backdrop-blur-xl border-b border-zinc-800/80"
-            : "bg-transparent"
+            ? "bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800"
+            : "bg-zinc-950/60 backdrop-blur-md"
         }`}
         style={{ fontFamily: "'Syne', sans-serif" }}
       >
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
-          
 
-          {/* Desktop links — centered */}
-          <div className="hidden md:flex items-center gap-1">
-               {/* Logo */}
-          <Link to="/" className="font-black text-xl tracking-tight text-white hover:opacity-80 transition-opacity">
+          {/* Logo — always visible */}
+          <Link to="/" className="font-black text-xl tracking-tight text-white hover:opacity-80 transition-opacity flex-shrink-0">
             Event<span className="text-amber-400">App</span>
           </Link>
+
+          {/* Desktop centre links */}
+          <div className="hidden md:flex items-center gap-1">
+            <Link to="/" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
+              Events
+            </Link>
             {user?.role === "admin" && (
-              <Link to="/admin"
-                className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
+              <Link to="/admin" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
                 Admin
               </Link>
             )}
             {["admin", "organizer"].includes(user?.role) && (
-              <Link to="/dashboard"
-                className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
+              <Link to="/dashboard" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
                 Dashboard
               </Link>
             )}
             {user?.role === "admin" && (
-              <Link to="/trash"
-                className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
+              <Link to="/trash" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
                 🗑️ Trash
               </Link>
             )}
           </div>
 
-          {/* Desktop right actions */}
+          {/* Desktop right */}
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
-        
-                 <Link to="/"
-              className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
-              Events
-            </Link>
-                <span className={`text-xs transition-all ${scrolled ? "text-zinc-500" : "text-white/50"}`}>
-                  {user.name}
-                </span>
+                <span className="text-xs text-zinc-500">{user.name}</span>
                 {["admin", "organizer"].includes(user?.role) && (
-                  <Link to="/create"
-                    className="text-xs font-black bg-amber-400 text-zinc-950 px-4 py-1.5 rounded-lg hover:bg-amber-300 transition-all">
+                  <Link to="/create" className="text-xs font-black bg-amber-400 text-zinc-950 px-4 py-1.5 rounded-lg hover:bg-amber-300 transition-all">
                     + Create
                   </Link>
                 )}
                 <button onClick={handleLogout}
-                  className={`text-xs font-bold px-3 py-1.5 rounded-lg border transition-all ${
-                    scrolled
-                      ? "border-zinc-700 text-zinc-500 hover:border-red-500/40 hover:text-red-400"
-                      : "border-white/15 text-white/50 hover:border-red-400/40 hover:text-red-400"
-                  }`}>
+                  className="text-xs font-bold px-3 py-1.5 rounded-lg border border-zinc-700 text-zinc-500 hover:border-red-500/40 hover:text-red-400 transition-all">
                   Logout
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login"
-                  className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${scrolled ? "text-zinc-400 hover:text-white" : "text-white/70 hover:text-white"}`}>
+                <Link to="/login" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
                   Login
                 </Link>
-                <Link to="/register"
-                  className="text-xs font-black bg-amber-400 text-zinc-950 px-4 py-1.5 rounded-lg hover:bg-amber-300 transition-all">
+                <Link to="/register" className="text-xs font-black bg-amber-400 text-zinc-950 px-4 py-1.5 rounded-lg hover:bg-amber-300 transition-all">
                   Get Started
                 </Link>
               </>
@@ -111,32 +97,40 @@ export default function Navbar() {
             onClick={() => setMenuOpen(v => !v)}
             aria-label="Menu"
           >
-            <span className="block h-px bg-white/70 transition-all duration-300 origin-center"
+            <span className="block h-px bg-white transition-all duration-300 origin-center"
               style={{ width: "22px", transform: menuOpen ? "translateY(6px) rotate(45deg)" : "none" }} />
-            <span className="block h-px bg-white/70 transition-all duration-300"
+            <span className="block h-px bg-white transition-all duration-300"
               style={{ width: "22px", opacity: menuOpen ? 0 : 1 }} />
-            <span className="block h-px bg-white/70 transition-all duration-300 origin-center"
+            <span className="block h-px bg-white transition-all duration-300 origin-center"
               style={{ width: "22px", transform: menuOpen ? "translateY(-6px) rotate(-45deg)" : "none" }} />
           </button>
         </div>
       </nav>
 
-      {/* Mobile fullscreen menu */}
+      {/* Mobile fullscreen overlay */}
       <div
-        className="fixed inset-0 z-40 flex flex-col justify-center px-8 bg-zinc-950 md:hidden transition-all duration-400"
-        style={{ opacity: menuOpen ? 1 : 0, pointerEvents: menuOpen ? "all" : "none", transform: menuOpen ? "translateY(0)" : "translateY(-10px)" }}
+        className="fixed inset-0 z-40 flex flex-col justify-center px-8 bg-zinc-950 md:hidden transition-all duration-300"
+        style={{
+          opacity: menuOpen ? 1 : 0,
+          pointerEvents: menuOpen ? "all" : "none",
+          transform: menuOpen ? "translateY(0)" : "translateY(-10px)",
+        }}
       >
         <ul className="list-none flex flex-col gap-1 mb-10">
           {[
-            { to: "/", label: "Events", show: true },
-            { to: "/admin", label: "Admin Dashboard", show: user?.role === "admin" },
-            { to: "/dashboard", label: "My Events", show: ["admin","organizer"].includes(user?.role) },
-            { to: "/create", label: "+ Create Event", show: ["admin","organizer"].includes(user?.role) },
-            { to: "/trash", label: "🗑️ Trash", show: user?.role === "admin" },
+            { to: "/",          label: "Events",           show: true },
+            { to: "/admin",     label: "Admin Dashboard",  show: user?.role === "admin" },
+            { to: "/dashboard", label: "My Events",        show: ["admin","organizer"].includes(user?.role) },
+            { to: "/create",    label: "+ Create Event",   show: ["admin","organizer"].includes(user?.role) },
+            { to: "/trash",     label: "🗑️ Trash",         show: user?.role === "admin" },
           ].filter(l => l.show).map((l, i) => (
-            <li key={l.to} style={{ transition: `opacity 0.35s ${i * 0.06 + 0.1}s, transform 0.35s ${i * 0.06 + 0.1}s`, opacity: menuOpen ? 1 : 0, transform: menuOpen ? "translateX(0)" : "translateX(-16px)" }}>
+            <li key={l.to} style={{
+              transition: `opacity 0.3s ${i * 0.05 + 0.1}s, transform 0.3s ${i * 0.05 + 0.1}s`,
+              opacity: menuOpen ? 1 : 0,
+              transform: menuOpen ? "translateX(0)" : "translateX(-16px)",
+            }}>
               <Link to={l.to} onClick={() => setMenuOpen(false)}
-                className="font-black text-lg text-white/70 hover:text-white transition-colors block py-2">
+                className="font-black text-lg text-zinc-400 hover:text-white transition-colors block py-2">
                 {l.label}
               </Link>
             </li>
@@ -144,10 +138,12 @@ export default function Navbar() {
         </ul>
 
         <div className="border-t border-zinc-800 pt-8"
-          style={{ transition: "opacity 0.4s 0.4s", opacity: menuOpen ? 1 : 0 }}>
+          style={{ transition: "opacity 0.3s 0.35s", opacity: menuOpen ? 1 : 0 }}>
           {user ? (
             <div className="flex flex-col gap-3">
-              <p className="text-zinc-600 text-sm">Signed in as <span className="text-white font-bold">{user.name}</span></p>
+              <p className="text-zinc-600 text-sm">
+                Signed in as <span className="text-white font-bold">{user.name}</span>
+              </p>
               <button onClick={handleLogout}
                 className="text-sm font-bold text-red-400 border border-red-500/25 px-4 py-2.5 rounded-xl hover:bg-red-500/5 transition-all self-start">
                 Logout

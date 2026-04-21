@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
@@ -16,19 +15,9 @@ import OrganizerDashboard from "./pages/OrganizerDashboard";
 import Navbar from "./components/Navbar";
 
 export default function App() {
-  const [theme, setTheme] = useState(() => localStorage.getItem("theme") || "light");
-
-  useEffect(() => {
-    document.body.classList.toggle("dark", theme === "dark");
-    localStorage.setItem("theme", theme);
-  }, [theme]);
-
-  const toggleTheme = () => setTheme(prev => prev === "dark" ? "light" : "dark");
-
   return (
     <>
       <Navbar />
-
       <Routes>
         <Route path="/" element={<Events />} />
         <Route path="/login" element={<Login />} />
