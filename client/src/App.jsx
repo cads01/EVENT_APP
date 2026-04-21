@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useLocation } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -14,10 +14,16 @@ import AdminDashboard from "./pages/AdminDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
 import Navbar from "./components/Navbar";
 
+// Pages where the navbar should NOT appear
+const NO_NAV_PAGES = ["/login", "/register"];
+
 export default function App() {
+  const location = useLocation();
+  const showNav = !NO_NAV_PAGES.includes(location.pathname);
+
   return (
     <>
-      <Navbar />
+      {showNav && <Navbar />}
       <Routes>
         <Route path="/" element={<Events />} />
         <Route path="/login" element={<Login />} />

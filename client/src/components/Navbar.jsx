@@ -31,18 +31,18 @@ export default function Navbar() {
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled
             ? "bg-zinc-950/95 backdrop-blur-xl border-b border-zinc-800"
-            : "bg-zinc-950/60 backdrop-blur-md"
+            : "bg-zinc-950/70 backdrop-blur-md"
         }`}
         style={{ fontFamily: "'Syne', sans-serif" }}
       >
         <div className="max-w-6xl mx-auto px-5 h-16 flex items-center justify-between">
 
-          {/* Logo — always visible */}
+          {/* Logo */}
           <Link to="/" className="font-black text-xl tracking-tight text-white hover:opacity-80 transition-opacity flex-shrink-0">
             Event<span className="text-amber-400">App</span>
           </Link>
 
-          {/* Desktop centre links */}
+          {/* Centre nav links */}
           <div className="hidden md:flex items-center gap-1">
             <Link to="/" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
               Events
@@ -64,18 +64,18 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Desktop right */}
+          {/* Right actions */}
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
-                <span className="text-xs text-zinc-500">{user.name}</span>
+                <span className="text-xs text-zinc-500 max-w-[120px] truncate">{user.name}</span>
                 {["admin", "organizer"].includes(user?.role) && (
                   <Link to="/create" className="text-xs font-black bg-amber-400 text-zinc-950 px-4 py-1.5 rounded-lg hover:bg-amber-300 transition-all">
                     + Create
                   </Link>
                 )}
                 <button onClick={handleLogout}
-                  className="text-xs font-bold px-3 py-1.5 rounded-lg border border-zinc-700 text-zinc-500 hover:border-red-500/40 hover:text-red-400 transition-all">
+                  className="text-xs font-bold px-3 py-1.5 rounded-lg border border-zinc-700 text-zinc-500 hover:border-red-500/50 hover:text-red-400 transition-all">
                   Logout
                 </button>
               </>
@@ -95,7 +95,7 @@ export default function Navbar() {
           <button
             className="flex md:hidden flex-col gap-[5px] justify-center w-8 h-8 focus:outline-none"
             onClick={() => setMenuOpen(v => !v)}
-            aria-label="Menu"
+            aria-label="Toggle menu"
           >
             <span className="block h-px bg-white transition-all duration-300 origin-center"
               style={{ width: "22px", transform: menuOpen ? "translateY(6px) rotate(45deg)" : "none" }} />
@@ -107,7 +107,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* Mobile fullscreen overlay */}
+      {/* Mobile fullscreen menu */}
       <div
         className="fixed inset-0 z-40 flex flex-col justify-center px-8 bg-zinc-950 md:hidden transition-all duration-300"
         style={{
@@ -118,11 +118,11 @@ export default function Navbar() {
       >
         <ul className="list-none flex flex-col gap-1 mb-10">
           {[
-            { to: "/",          label: "Events",           show: true },
-            { to: "/admin",     label: "Admin Dashboard",  show: user?.role === "admin" },
-            { to: "/dashboard", label: "My Events",        show: ["admin","organizer"].includes(user?.role) },
-            { to: "/create",    label: "+ Create Event",   show: ["admin","organizer"].includes(user?.role) },
-            { to: "/trash",     label: "🗑️ Trash",         show: user?.role === "admin" },
+            { to: "/",          label: "Events",          show: true },
+            { to: "/admin",     label: "Admin Dashboard", show: user?.role === "admin" },
+            { to: "/dashboard", label: "My Events",       show: ["admin","organizer"].includes(user?.role) },
+            { to: "/create",    label: "+ Create Event",  show: ["admin","organizer"].includes(user?.role) },
+            { to: "/trash",     label: "🗑️ Trash",        show: user?.role === "admin" },
           ].filter(l => l.show).map((l, i) => (
             <li key={l.to} style={{
               transition: `opacity 0.3s ${i * 0.05 + 0.1}s, transform 0.3s ${i * 0.05 + 0.1}s`,
