@@ -27,6 +27,124 @@ const getStatus = (date) => {
   return "upcoming";
 };
 
+// ── Auto-sliding carousel ────────────────────────────────────────────────────
+function Carousel({ events }) {
+  const [active, setActive] = useState(0);
+  const [hovered, setHovered] = useState(null);
+  const timerRef = useRef(null);
+  const featured = events.slice(0, 6);
+
+  const next = useCallback(() => setActive(a => (a + 1) % featured.length), [featured.length]);
+  const prev = () => setActive(a => (a - 1 + featured.length) % featured.length);
+
+  useEffect(() => {
+    timerRef.current = setInterval(next, 4000);
+    return () => clearInterval(timerRef.current);
+  }, [next]);
+
+  const pauseTimer = () => clearInterval(timerRef.current);
+  const resumeTimer = () => { timerRef.current = setInterval(next, 4000); };
+
+  if (!featured.length) return null;
+
+  const getStatus = (date) => {
+    const now = new Date(), d = new Date(date);
+    if (d < now) return { label: "Ended", cls: "text-zinc-400 bg-zinc-800 border-zinc-700" };
+    if (d <= new Date(now.getTime() + 86400000)) return { label: "Live Now", cls: "text-emerald-400 bg-emerald-400/10 border-emerald-400/25", pulse: true };
+    return { label: "Upcoming", cls: "text-sky-400 bg-sky-400/10 border-sky-400/25" };
+  };
+
+  return (
+    <div className="relative w-full overflow-hidden" onMouseEnter={pauseTimer} onMouseLeave={resumeTimer}>
+      {/* Track */}
+      <div className="flex gap-4 px-5 pb-6 overflow-visible" style={{ width: "max-content" }}>
+        {featured.map((ev, i) => {
+          const st = getStatus(ev.date);
+          const isActive = i === active;
+          const isHov = hovered === i;
+          return (
+            <Link
+              key={ev._id}
+              to={`/events/${ev._id}`}
+              onMouseEnter={() => setHovered(i)}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                width: isActive ? "380px" : "260px",
+                opacity: isActive ? 1 : 0.55,
+                transform: isHov ? "translateY(-8px) scale(1.02)" : isActive ? "translateY(0)" : "translateY(6px)",
+                transition: "all 0.5s cubic-bezier(0.4,0,0.2,1)",
+                flexShrink: 0,
+              }}
+              className="block rounded-3xl overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-zinc-600 hover:shadow-2xl hover:shadow-black/60 relative group"
+              onClick={e => { if (!isActive) { e.preventDefault(); setActive(i); } }}
+            >
+              {/* Image */}
+              <div className="relative overflow-hidden" style={{ height: isActive ? "240px" : "180px", transition: "height 0.5s" }}>
+                {ev.image ? (
+                  <img src={ev.image} alt={ev.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                ) : (
+                  <div className="w-full h-full bg-gradient-to-br from-zinc-700 to-zinc-900 flex items-center justify-center text-6xl">🎟</div>
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/30 to-transparent" />
+
+                {/* Status */}
+                <div className="absolute top-3 left-3">
+                  <span className={`inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest uppercase px-2.5 py-1 rounded-full border backdrop-blur-sm ${st.cls}`}>
+                    {st.pulse && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+                    {st.label}
+                  </span>
+                </div>
+
+                {/* Price */}
+                <div className="absolute top-3 right-3">
+                  <span className={`text-xs font-black px-2.5 py-1 rounded-full border backdrop-blur-sm ${ev.price === 0 ? "bg-emerald-400/20 text-emerald-400 border-emerald-400/25" : "bg-amber-400/20 text-amber-400 border-amber-400/25"}`}>
+                    {ev.price === 0 ? "Free" : `₦${ev.price.toLocaleString()}`}
+                  </span>
+                </div>
+              </div>
+
+              {/* Info */}
+              <div className="p-4">
+                <h3 className="font-black text-white text-sm leading-tight mb-2 line-clamp-2">{ev.title}</h3>
+                <p className="text-zinc-500 text-[11px] mb-1 truncate">📍 {ev.location}</p>
+                <p className="text-zinc-600 text-[11px] mb-3">📅 {new Date(ev.date).toDateString()}</p>
+
+                {/* Hover detail popup */}
+                <div className={`overflow-hidden transition-all duration-300 ${isHov || isActive ? "max-h-20 opacity-100" : "max-h-0 opacity-0"}`}>
+                  <p className="text-zinc-500 text-[11px] line-clamp-2 mb-3">{ev.description}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-600">{ev.attendees?.length ?? 0} attending</span>
+                    <span className="text-[10px] font-bold text-amber-400 group-hover:underline">View details →</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Nav arrows */}
+      <button onClick={prev}
+        className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-zinc-900/90 border border-zinc-700 text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg text-sm">
+        ‹
+      </button>
+      <button onClick={next}
+        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-zinc-900/90 border border-zinc-700 text-white flex items-center justify-center hover:bg-zinc-800 transition-all shadow-lg text-sm">
+        ›
+      </button>
+
+      {/* Dots */}
+      <div className="flex justify-center gap-1.5 mt-2">
+        {featured.map((_, i) => (
+          <button key={i} onClick={() => setActive(i)}
+            className={`rounded-full transition-all duration-300 ${i === active ? "w-6 h-1.5 bg-amber-400" : "w-1.5 h-1.5 bg-zinc-700 hover:bg-zinc-500"}`} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 // ── Horizontal scroll row (original style) ───────────────────────────────────
 function ScrollRow({ title, events, isAdmin, onDelete }) {
   const rowRef = useRef(null);
