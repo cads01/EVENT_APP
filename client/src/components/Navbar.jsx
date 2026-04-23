@@ -47,6 +47,11 @@ export default function Navbar() {
             <Link to="/" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
               Events
             </Link>
+            {user && (
+  <Link to="/my-tickets" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
+    🎫 Tickets
+  </Link>
+)}
             {user?.role === "admin" && (
               <Link to="/admin" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
                 Admin

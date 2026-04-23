@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useForm, ValidationError } from '@formspree/react';
 
 export default function Contact() {
   const [form, setForm] = useState({
