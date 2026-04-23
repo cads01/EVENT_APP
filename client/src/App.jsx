@@ -12,14 +12,14 @@ import CreateBlog from "./pages/CreateBlog";
 import Trash from "./pages/Trash";
 import AdminDashboard from "./pages/AdminDashboard";
 import OrganizerDashboard from "./pages/OrganizerDashboard";
+import MyTickets from "./pages/MyTickets";
 import Navbar from "./components/Navbar";
 
-// Pages where the navbar should NOT appear
-const NO_NAV_PAGES = ["/login", "/register"];
+const NO_NAV = ["/login", "/register"];
 
 export default function App() {
   const location = useLocation();
-  const showNav = !NO_NAV_PAGES.includes(location.pathname);
+  const showNav = !NO_NAV.includes(location.pathname);
 
   return (
     <>
@@ -31,6 +31,11 @@ export default function App() {
         <Route path="/events/:id" element={<EventDetail />} />
         <Route path="/events/:id/summary" element={<EventSummary />} />
         <Route path="/blog/:id" element={<BlogDetail />} />
+        <Route path="/my-tickets" element={
+          <ProtectedRoute roles={["user","admin","organizer"]}>
+            <MyTickets />
+          </ProtectedRoute>
+        } />
         <Route path="/create" element={
           <ProtectedRoute roles={["admin", "organizer"]}>
             <CreateEvent />

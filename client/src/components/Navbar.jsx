@@ -48,7 +48,7 @@ export default function Navbar() {
               Events
             </Link>
             {user && (
-  <Link to="/Ticket" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
+  <Link to="/my-tickets" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
     🎫 Tickets
   </Link>
 )}
