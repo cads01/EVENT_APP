@@ -20,6 +20,10 @@ const eventSchema = new mongoose.Schema({
   },
   image:              { type: String, default: "" },
   hostImage:          { type: String, default: "" },
+  videoTrailer:       { type: String, default: "" },
+  dressCode:          { type: String, default: "" },
+  bagPolicy:          { type: String, default: "" },
+  amenities:          [{ type: String }],
   price:              { type: Number, default: 0 },
   capacity:           { type: Number, default: 100 },
   attendees:          [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
@@ -27,6 +31,10 @@ const eventSchema = new mongoose.Schema({
   requiresModeration: { type: Boolean, default: false },
   specialCode:        { type: String, default: "" },
   faq:                [{ question: String, answer: String }],
+  matchmakingEnabled: { type: Boolean, default: false },
+  donations:          { type: Number, default: 0 },
+  posts:              { type: Number, default: 0 },
+  comments:           [{ user: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, text: String, createdAt: { type: Date, default: Date.now } }],
 }, { timestamps: true });
 
 export default mongoose.model("Event", eventSchema);

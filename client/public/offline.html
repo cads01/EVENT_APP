@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>Offline - EventApp</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#09090b;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100dvh;padding:20px;text-align:center}
+  h1{font-size:28px;margin-bottom:8px;font-weight:900}
+  p{color:#a1a1aa;font-size:14px;margin-bottom:24px}
+  .retry-btn{background:#f59e0b;color:#09090b;border:none;padding:12px 24px;border-radius:12px;font-weight:900;font-size:13px;cursor:pointer}
+</style></head>
+<body>
+  <div>
+    <div style="font-size:48px;margin-bottom:16px">📡</div>
+    <h1>You're Offline</h1>
+    <p>Connect to the internet to browse events.</p>
+    <button class="retry-btn" onclick="location.reload()">Try Again</button>
+  </div>
+</body>
+</html>

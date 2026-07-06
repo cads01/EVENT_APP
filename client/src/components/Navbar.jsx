@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -73,6 +74,10 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             {user ? (
               <>
+                <NotificationBell user={user} />
+                <Link to="/settings" className="text-xs font-bold px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white transition-all">
+                  Settings
+                </Link>
                 <span className="text-xs text-zinc-500 max-w-[120px] truncate">{user.name}</span>
                 {["admin", "organizer"].includes(user?.role) && (
                   <Link to="/create" className="text-xs font-black bg-amber-400 text-zinc-950 px-4 py-1.5 rounded-lg hover:bg-amber-300 transition-all">
@@ -144,9 +149,13 @@ export default function Navbar() {
 
         <div className="border-t border-zinc-800 pt-8"
           style={{ transition: "opacity 0.3s 0.35s", opacity: menuOpen ? 1 : 0 }}>
-          {user ? (
-            <div className="flex flex-col gap-3">
-              <p className="text-zinc-600 text-sm">
+              {user ? (
+                <div className="flex flex-col gap-3">
+                  <Link to="/settings" onClick={function() { setMenuOpen(false) }}
+                    className="text-sm font-bold text-zinc-400 border border-zinc-700 px-4 py-2.5 rounded-xl hover:text-white transition-all self-start">
+                    Settings
+                  </Link>
+                  <p className="text-zinc-600 text-sm">
                 Signed in as <span className="text-white font-bold">{user.name}</span>
               </p>
               <button onClick={handleLogout}

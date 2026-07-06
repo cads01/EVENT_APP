@@ -2,8 +2,20 @@ import { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
+import { motion } from "framer-motion";
 import Countdown from "../components/Countdown";
 import GetDirections from "../components/GetDirections";
+import KnowBeforeYouGo from "../components/KnowBeforeYouGo";
+import EmbeddedMap from "../components/EmbeddedMap";
+import LiveUpdates from "../components/LiveUpdates";
+import EventForum from "../components/EventForum";
+import VIPChat from "../components/VIPChat";
+import EventStories from "../components/EventStories";
+import SplitPayment from "../components/SplitPayment";
+import Matchmaking from "../components/Matchmaking";
+import PostEventRetargeting from "../components/PostEventRetargeting";
+import EventPosts from "../components/EventPosts";
+import { cacheTicket, cacheEventData } from "../utils/offlineWallet";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -16,21 +28,37 @@ export default function EventDetail() {
   const [showAttendees, setShowAttendees] = useState(false);
   const [loadingAttendees, setLoadingAttendees] = useState(false);
   const isAdmin = user?.role === "admin";
+  const isOrganizer = ["admin", "organizer"].includes(user?.role);
 
-  const refresh = () => API.get(`/events/${id}`).then(res => setEvent(res.data));
+  const refresh = () => API.get(`/events/${id}`).then(res => {
+    setEvent(res.data);
+    cacheEventData(id, res.data);
+  });
 
   useEffect(() => { refresh().catch(() => setMessage("Failed to load event.")); }, [id]);
 
   const isAttending = event?.attendees?.some(
     a => (a._id || a).toString() === (user?._id || user?.id)
   );
+  const isPast = event && new Date(event.date) < new Date();
+  const isVip = user?.role === "admin" || user?.role === "organizer";
 
   const handleRSVP = async () => {
     try {
       setLoading(true); setMessage("");
-      await API.post(`/events/${id}/rsvp`);
+      const res = await API.post(`/events/${id}/rsvp`);
       setMessage("success");
       await refresh();
+      if (res.data.ticketCode) {
+        cacheTicket({
+          _id: id + "_ticket",
+          event: { _id: id, title: event.title, date: event.date, location: event.location, image: event.image },
+          ticketCode: res.data.ticketCode,
+          status: "active",
+          issuedAt: new Date().toISOString(),
+          paidAmount: event.price || 0,
+        });
+      }
     } catch (err) { setMessage(err.response?.data?.message || "RSVP failed"); }
     finally { setLoading(false); }
   };
@@ -51,8 +79,12 @@ export default function EventDetail() {
       email: user.email,
       amount: event.price * 100,
       currency: "NGN",
-      callback: () => handleRSVP(),
-      onClose: () => setMessage("cancelled"),
+      metadata: { event_id: id, user_id: user._id || user.id },
+      callback: function() {
+        setMessage("payment_success");
+        refresh();
+      },
+      onClose: function() { setMessage("cancelled") },
     });
     handler.openIframe();
   };
@@ -76,8 +108,6 @@ export default function EventDetail() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
-
-      {/* Attendees modal */}
       {showAttendees && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">
@@ -124,7 +154,6 @@ export default function EventDetail() {
         </div>
       )}
 
-      {/* Hero */}
       <div className="relative h-72 md:h-[420px] overflow-hidden">
         {event.image ? (
           <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
@@ -132,16 +161,18 @@ export default function EventDetail() {
           <div className="w-full h-full bg-gradient-to-br from-zinc-800 to-zinc-900 flex items-center justify-center text-8xl">🎟</div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
-
-        {/* Badges */}
         <div className="absolute bottom-6 left-6 flex items-center gap-2">
           <span className={`text-xs font-black px-3 py-1.5 rounded-full border ${event.price === 0 ? "bg-emerald-400/20 text-emerald-400 border-emerald-400/30" : "bg-amber-400/20 text-amber-400 border-amber-400/30"}`}>
             {event.price === 0 ? "Free" : `₦${event.price.toLocaleString()}`}
           </span>
+          {event.videoTrailer && (
+            <a href={event.videoTrailer} target="_blank" rel="noopener noreferrer"
+              className="text-xs font-bold px-3 py-1.5 rounded-full border text-rose-400 bg-rose-400/10 border-rose-400/30 hover:bg-rose-400/20 transition-all">
+              ▶ Watch Trailer
+            </a>
+          )}
         </div>
-
-        {/* Admin actions */}
-        {isAdmin && (
+        {isOrganizer && (
           <div className="absolute top-4 right-4 flex gap-2">
             <button onClick={() => navigate(`/events/${id}/edit`)}
               className="bg-zinc-900/80 backdrop-blur-sm border border-zinc-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:border-amber-400/50 hover:text-amber-400 transition-all">
@@ -155,12 +186,11 @@ export default function EventDetail() {
         )}
       </div>
 
-      {/* Content */}
       <div className="max-w-4xl mx-auto px-5 py-10">
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-4">
-          <h1 className="text-4xl font-black mb-8 leading-tight">{event.title}</h1>
+          <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className="text-4xl font-black mb-8 leading-tight">{event.title}</motion.h1>
 
-          {/* Info cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-8">
             {[
               { icon: "📍", label: "Location", value: event.location },
@@ -172,17 +202,15 @@ export default function EventDetail() {
                 <p className="text-white font-bold text-sm">{item.value}</p>
               </div>
             ))}
-            <div
-              onClick={isAdmin ? loadAttendees : undefined}
-              className={`bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-4 text-center ${isAdmin ? "cursor-pointer hover:border-amber-400/30 transition-all" : ""}`}>
+            <div onClick={isOrganizer ? loadAttendees : undefined}
+              className={`bg-zinc-800/50 border border-zinc-700/50 rounded-2xl p-4 text-center ${isOrganizer ? "cursor-pointer hover:border-amber-400/30 transition-all" : ""}`}>
               <p className="text-2xl mb-1">👥</p>
               <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-1">Attending</p>
               <p className="text-white font-bold text-sm">{event.attendees.length} / {event.capacity}</p>
-              {isAdmin && <p className="text-[10px] text-amber-400 mt-1">Click to view</p>}
+              {isOrganizer && <p className="text-[10px] text-amber-400 mt-1">Click to view</p>}
             </div>
           </div>
 
-          {/* Description */}
           <div className="border-t border-zinc-800 pt-6 mb-8">
             <h2 className="font-black text-white mb-3 text-lg">About</h2>
             <p className="text-zinc-400 leading-relaxed whitespace-pre-line text-sm">{event.description}</p>
@@ -192,7 +220,6 @@ export default function EventDetail() {
             </div>
           </div>
 
-          {/* Capacity bar */}
           <div className="mb-8">
             <div className="flex justify-between text-xs text-zinc-500 mb-2">
               <span>Capacity</span>
@@ -204,7 +231,6 @@ export default function EventDetail() {
             </div>
           </div>
 
-          {/* Messages */}
           {message === "success" && (
             <div className="bg-emerald-400/10 border border-emerald-400/25 text-emerald-400 px-4 py-3 rounded-xl mb-6 text-sm font-bold">
               🎉 RSVP confirmed! Check your email for your ticket.
@@ -215,18 +241,22 @@ export default function EventDetail() {
               Your RSVP has been cancelled.
             </div>
           )}
+          {message === "payment_success" && (
+            <div className="bg-emerald-400/10 border border-emerald-400/25 text-emerald-400 px-4 py-3 rounded-xl mb-6 text-sm font-bold">
+              🎉 Payment confirmed! Your ticket is being issued — check your email shortly.
+            </div>
+          )}
           {message === "cancelled" && (
             <div className="bg-amber-400/10 border border-amber-400/25 text-amber-400 px-4 py-3 rounded-xl mb-6 text-sm">
               Payment was cancelled.
             </div>
           )}
-          {message && !["success", "cancelled_rsvp", "cancelled"].includes(message) && (
+          {message && !["success", "payment_success", "cancelled_rsvp", "cancelled"].includes(message) && (
             <div className="bg-red-500/10 border border-red-500/25 text-red-400 px-4 py-3 rounded-xl mb-6 text-sm">
               {message}
             </div>
           )}
 
-          {/* CTA */}
           {user ? (
             isAttending ? (
               <button onClick={handleCancelRSVP} disabled={loading}
@@ -248,20 +278,15 @@ export default function EventDetail() {
             <div className="bg-zinc-800/50 border border-zinc-700 rounded-2xl p-6 text-center">
               <p className="text-zinc-400 mb-4 text-sm">Sign in to RSVP for this event</p>
               <div className="flex gap-3 justify-center">
-                <Link to="/login" className="bg-amber-400 text-zinc-950 px-6 py-2.5 rounded-xl font-black text-sm hover:bg-amber-300 transition-all">
-                  Login
-                </Link>
-                <Link to="/register" className="border border-zinc-700 text-zinc-400 px-6 py-2.5 rounded-xl font-bold text-sm hover:border-zinc-500 hover:text-white transition-all">
-                  Register
-                </Link>
+                <Link to="/login" className="bg-amber-400 text-zinc-950 px-6 py-2.5 rounded-xl font-black text-sm hover:bg-amber-300 transition-all">Login</Link>
+                <Link to="/register" className="border border-zinc-700 text-zinc-400 px-6 py-2.5 rounded-xl font-bold text-sm hover:border-zinc-500 hover:text-white transition-all">Register</Link>
               </div>
             </div>
           )}
         </div>
 
-        {/* Organizer */}
         {event.createdBy && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 mb-8">
             <p className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold mb-4">Organizer</p>
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center text-zinc-950 font-black">
@@ -274,6 +299,21 @@ export default function EventDetail() {
             </div>
           </div>
         )}
+
+        <KnowBeforeYouGo event={event} />
+        <EmbeddedMap venue={event.venue} location={event.location} />
+        <LiveUpdates eventId={id} isOrganizer={isOrganizer} canPost={isOrganizer} />
+        <SplitPayment eventId={id} eventPrice={event.price} user={user} />
+        <Matchmaking eventId={id} user={user} />
+        <EventStories eventId={id} user={user} isAttending={isAttending} />
+        <EventForum eventId={id} user={user} />
+        <VIPChat eventId={id} user={user} isVip={isVip} />
+        <PostEventRetargeting event={event} user={user} isPast={isPast} isAttending={isAttending} />
+
+        <div className="mb-8">
+          <EventPosts eventId={id} user={user} isAttending={isAttending}
+            canPost={isAttending} requiresModeration={event.requiresModeration} readOnly={!isAttending} />
+        </div>
       </div>
     </div>
   );

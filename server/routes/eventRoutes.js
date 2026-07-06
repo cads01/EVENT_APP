@@ -7,6 +7,7 @@ import { verifyToken, requireAdmin, requireOrganizer } from "../middleware/auth.
 import { upload } from "../config/cloudinary.js";
 import cloudinary from "../config/cloudinary.js";
 import { sendRSVPConfirmation } from "../config/email.js";
+import { createNotification } from "../utils/notifications.js";
 
 const router = express.Router();
 
@@ -45,11 +46,50 @@ router.post("/", verifyToken, requireOrganizer, multiUpload, async (req, res) =>
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
-// ─── Get all events ───────────────────────────────────────────────────────────
+// ─── Get all events (paginated, searchable) ──────────────────────────────────
 router.get("/", async (req, res) => {
   try {
-    const events = await Event.find().populate("createdBy", "name email role");
-    res.json(events);
+    var q = {};
+    var { search, eventType, status, page, limit, sort } = req.query;
+    page = Math.max(1, parseInt(page) || 1);
+    limit = Math.min(100, Math.max(1, parseInt(limit) || 50));
+    var skip = (page - 1) * limit;
+
+    if (search) {
+      var s = String(search);
+      q.$or = [
+        { title: { $regex: s, $options: "i" } },
+        { location: { $regex: s, $options: "i" } },
+        { description: { $regex: s, $options: "i" } },
+      ];
+    }
+    if (eventType && eventType !== "all") {
+      q.eventType = eventType;
+    }
+    if (status) {
+      var now = new Date();
+      var tomorrow = new Date(now.getTime() + 86400000);
+      if (status === "ongoing") {
+        q.date = { $gte: now, $lte: tomorrow };
+      } else if (status === "upcoming") {
+        q.date = { $gt: tomorrow };
+      } else if (status === "past") {
+        q.date = { $lt: now };
+      }
+    }
+
+    var sortObj = {};
+    if (sort === "oldest") sortObj.date = 1;
+    else if (sort === "price_asc") sortObj.price = 1;
+    else if (sort === "price_desc") sortObj.price = -1;
+    else sortObj.date = -1;
+
+    var [events, total] = await Promise.all([
+      Event.find(q).populate("createdBy", "name email role").sort(sortObj).skip(skip).limit(limit),
+      Event.countDocuments(q),
+    ]);
+
+    res.json({ events, total, page, pages: Math.ceil(total / limit) });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 
@@ -206,6 +246,14 @@ router.post("/:id/rsvp", verifyToken, async (req, res) => {
       });
     } catch (emailErr) { console.error("Email failed:", emailErr.message); }
 
+    createNotification(req.user.id, {
+      type: "update",
+      title: "RSVP Confirmed",
+      message: "You RSVP'd to " + event.title,
+      eventId: event._id,
+      link: "/events/" + event._id,
+    });
+
     res.json({ message: "RSVP successful! Check your email for your ticket.", ticketCode: ticket.ticketCode });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
@@ -219,6 +267,44 @@ router.delete("/:id/rsvp", verifyToken, async (req, res) => {
     await event.save();
     await Ticket.findOneAndUpdate({ event: req.params.id, user: req.user.id }, { status: "cancelled" });
     res.json({ message: "RSVP cancelled" });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// ─── Add comment to event ─────────────────────────────────────────────────
+router.post("/:id/comment", verifyToken, async (req, res) => {
+  try {
+    const { text } = req.body;
+    if (!text) return res.status(400).json({ message: "Comment text required" });
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+    event.comments.push({ user: req.user.id, text, createdAt: new Date() });
+    await event.save();
+    await event.populate("comments.user", "name email");
+    res.json(event);
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// ─── Post-event feedback ─────────────────────────────────────────────────
+router.post("/:id/feedback", verifyToken, async (req, res) => {
+  try {
+    const { rating, feedback } = req.body;
+    if (!rating) return res.status(400).json({ message: "Rating required" });
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: "Event not found" });
+    const Feedback = (await import("../models/Feedback.js")).default;
+    await Feedback.create({ event: req.params.id, user: req.user.id, rating, feedback });
+    res.json({ message: "Thank you for your feedback!" });
+  } catch (err) { res.status(500).json({ message: err.message }); }
+});
+
+// ─── Claim badge ─────────────────────────────────────────────────────────
+router.post("/claim-badge", verifyToken, async (req, res) => {
+  try {
+    const { badge } = req.body;
+    const user = await User.findById(req.user.id);
+    if (!user.badges.includes(badge)) user.badges.push(badge);
+    await user.save();
+    res.json({ badges: user.badges });
   } catch (err) { res.status(500).json({ message: err.message }); }
 });
 

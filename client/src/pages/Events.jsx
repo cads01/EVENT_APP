@@ -1,10 +1,15 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, lazy, Suspense } from "react";
 import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { optimizeCloudinary } from "../utils/images";
+import BlogCarousel from "../components/BlogCarousel";
 import About from "../components/About";
 import FAQ from "../components/FAQ";
 import Contact from "../components/Contact";
+
+const HeroCarousel = lazy(function() { return import("../components/HeroCarousel") });
+const Recommendations = lazy(function() { return import("../components/Recommendations") });
 
 const EVENT_TYPE_COLORS = {
   Wedding:    "text-pink-400 bg-pink-400/10 border-pink-400/25",
@@ -56,7 +61,7 @@ function ScrollRow({ title, events, isAdmin, onDelete }) {
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-600 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-black/60 transition-all duration-300">
                   <div className="relative h-40 overflow-hidden bg-zinc-800">
                     {ev.image ? (
-                      <img src={ev.image} alt={ev.title}
+                      <img src={optimizeCloudinary(ev.image, 400)} alt={ev.title}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-5xl bg-gradient-to-br from-zinc-700 to-zinc-900">🎟</div>
@@ -145,7 +150,6 @@ function SpotlightSection({ events }) {
 
   return (
     <div className="px-5 md:px-10 py-10">
-      {/* Section header */}
       <div className="flex items-center gap-4 mb-6">
         <div>
           <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-1">Featured</p>
@@ -154,11 +158,8 @@ function SpotlightSection({ events }) {
         <div className="flex-1 h-px bg-gradient-to-r from-zinc-700 to-transparent ml-2" />
       </div>
 
-      {/* Main spotlight card — 7XMovies style */}
       <div className="rounded-3xl overflow-hidden relative mb-5"
         style={{ minHeight: "320px", background: "#0d0d0d" }}>
-
-        {/* Background image */}
         {ev.image && (
           <>
             <img src={ev.image} alt="" className="absolute inset-0 w-full h-full object-cover opacity-25" />
@@ -166,9 +167,7 @@ function SpotlightSection({ events }) {
             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 to-transparent" />
           </>
         )}
-
         <div className="relative flex items-center gap-6 p-6 md:p-10">
-          {/* LEFT — host image or event thumbnail */}
           <div className="flex-shrink-0">
             <div className="w-32 h-32 md:w-48 md:h-48 rounded-2xl overflow-hidden ring-2 ring-amber-400/30 shadow-2xl shadow-black/60">
               {ev.hostImage ? (
@@ -180,8 +179,6 @@ function SpotlightSection({ events }) {
               )}
             </div>
           </div>
-
-          {/* RIGHT — event details */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-3 flex-wrap">
               {status === "ongoing" && (
@@ -200,11 +197,9 @@ function SpotlightSection({ events }) {
                 </span>
               )}
             </div>
-
             <h2 className="text-3xl md:text-4xl font-black text-white leading-none tracking-tight mb-3 line-clamp-2">
               {ev.title}
             </h2>
-
             <div className="flex items-center gap-4 mb-2 flex-wrap text-sm text-zinc-400">
               <span>📍 {ev.location}</span>
               <span>📅 {new Date(ev.date).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</span>
@@ -212,24 +207,19 @@ function SpotlightSection({ events }) {
                 {ev.price === 0 ? "Free" : `₦${ev.price.toLocaleString()}`}
               </span>
             </div>
-
             {ev.createdBy?.name && (
               <p className="text-zinc-500 text-xs mb-3">
                 Hosted by <span className="text-zinc-300 font-semibold">{ev.createdBy.name}</span>
               </p>
             )}
-
             <p className="text-zinc-400 text-sm leading-relaxed line-clamp-2 mb-5 max-w-lg">
               {ev.description}
             </p>
-
             <Link to={`/events/${ev._id}`}
               className="inline-flex items-center gap-2 bg-amber-400 text-zinc-950 font-black text-sm px-6 py-3 rounded-xl hover:bg-amber-300 transition-all shadow-lg shadow-amber-500/20">
               View Details →
             </Link>
           </div>
-
-          {/* Far right — large faded bg image */}
           {ev.image && (
             <div className="hidden lg:block absolute right-0 top-0 bottom-0 w-72 overflow-hidden rounded-r-3xl pointer-events-none">
               <img src={ev.image} alt="" className="w-full h-full object-cover opacity-50" />
@@ -239,14 +229,13 @@ function SpotlightSection({ events }) {
         </div>
       </div>
 
-      {/* Thumbnail selector strip */}
       <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
         {featured.map((e, i) => (
           <button key={e._id} onClick={() => setActiveIdx(i)}
             className={`flex-shrink-0 rounded-xl overflow-hidden transition-all duration-300 ${i === activeIdx ? "ring-2 ring-amber-400 opacity-100 scale-105" : "opacity-45 hover:opacity-70"}`}
             style={{ width: "100px", height: "60px" }}>
-            {e.image ? (
-              <img src={e.image} alt={e.title} className="w-full h-full object-cover" />
+              {e.image ? (
+                <img src={optimizeCloudinary(e.image, 240)} alt={e.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full bg-zinc-800 flex items-center justify-center text-xl">🎟</div>
             )}
@@ -262,42 +251,69 @@ export default function Events() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("");
+  const [filterType, setFilterType] = useState("");
+  const [filterSort, setFilterSort] = useState("newest");
   const { user } = useAuth();
   const navigate = useNavigate();
   const isAdmin = user?.role === "admin";
+  var searchTimer;
 
-  useEffect(() => {
-    API.get("/events").then(res => setEvents(res.data)).finally(() => setLoading(false));
-  }, []);
+  var fetchEvents = function(q, p, status, type, sort) {
+    setLoading(true);
+    var params = { page: p || 1, limit: 50 };
+    if (q && q.trim()) params.search = q.trim();
+    if (status) params.status = status;
+    if (type) params.eventType = type;
+    params.sort = sort || "newest";
+    API.get("/events", { params: params }).then(function(res) {
+      setEvents(res.data.events || []);
+      setTotalPages(res.data.pages || 1);
+      setPage(res.data.page || 1);
+    }).catch(function() {}).finally(function() { setLoading(false) });
+  };
 
-  const handleDelete = async () => {
+  useEffect(function() { fetchEvents(search, page, filterStatus, filterType, filterSort) }, []);
+
+  var handleSearch = function(val) {
+    setSearch(val);
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function() { setPage(1); fetchEvents(val, 1, filterStatus, filterType, filterSort) }, 350);
+  };
+
+  var handleFilterChange = function(status, type, sort) {
+    var s = status !== undefined ? status : filterStatus;
+    var t = type !== undefined ? type : filterType;
+    var o = sort !== undefined ? sort : filterSort;
+    setFilterStatus(s);
+    setFilterType(t);
+    setFilterSort(o);
+    setPage(1);
+    fetchEvents(search, 1, s, t, o);
+  };
+
+  var handleDelete = async function() {
     if (!deleteTarget) return;
     try {
       setDeleting(true);
-      await API.delete(`/events/${deleteTarget._id}`);
-      setEvents(prev => prev.filter(e => e._id !== deleteTarget._id));
+      await API.delete("/events/" + deleteTarget._id);
+      setEvents(function(prev) { return prev.filter(function(e) { return e._id !== deleteTarget._id }) });
       setDeleteTarget(null);
     } catch (err) { alert(err.response?.data?.message || "Failed"); }
     finally { setDeleting(false); }
   };
 
-  const filtered = search
-    ? events.filter(e =>
-        e.title.toLowerCase().includes(search.toLowerCase()) ||
-        e.location.toLowerCase().includes(search.toLowerCase()) ||
-        (e.eventType || "").toLowerCase().includes(search.toLowerCase()))
-    : events;
-
-  const live     = filtered.filter(e => getStatus(e.date) === "ongoing");
-  const upcoming = filtered.filter(e => getStatus(e.date) === "upcoming");
-  const past     = filtered.filter(e => getStatus(e.date) === "past");
+  var live     = events.filter(function(e) { return getStatus(e.date) === "ongoing" });
+  var upcoming = events.filter(function(e) { return getStatus(e.date) === "upcoming" });
+  var past     = events.filter(function(e) { return getStatus(e.date) === "past" });
 
   return (
     <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
 
-      {/* Delete modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="bg-zinc-900 border border-zinc-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl">
@@ -318,10 +334,22 @@ export default function Events() {
         </div>
       )}
 
-      {/* ── SEARCH + ACTIONS (top, under navbar) ── */}
-      <div className="pt-20 px-5 md:px-10 pb-5 flex items-center gap-3">
+      {/* ── CINEMATIC HERO CAROUSEL ── */}
+      <Suspense fallback={<div className="h-[70vh] bg-zinc-900 animate-pulse" />}>
+        <HeroCarousel events={events} />
+      </Suspense>
+
+      {/* ── RECOMMENDATIONS ── */}
+      <div className="pt-6">
+        <Suspense fallback={<div className="h-32 bg-zinc-900 animate-pulse mx-5 md:mx-10 rounded-2xl" />}>
+          <Recommendations user={user} />
+        </Suspense>
+      </div>
+
+      {/* ── SEARCH + ACTIONS ── */}
+      <div className="pt-6 px-5 md:px-10 pb-5 flex items-center gap-3">
         <div className="relative flex-1 max-w-md">
-          <input value={search} onChange={e => setSearch(e.target.value)}
+          <input value={search} onChange={function(e) { handleSearch(e.target.value) }}
             placeholder="Search events, locations, types…"
             className="w-full bg-zinc-900 border border-zinc-700 text-white placeholder-zinc-600 px-5 py-3 rounded-xl text-sm focus:outline-none focus:border-amber-400/50 transition-all" />
           <span className="absolute right-4 top-1/2 -translate-y-1/2 text-zinc-600">🔍</span>
@@ -340,39 +368,78 @@ export default function Events() {
         )}
       </div>
 
+      {/* ── FILTERS ── */}
+      <div className="px-5 md:px-10 pb-5 flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1 p-0.5 bg-zinc-900 border border-zinc-800 rounded-xl">
+          {["", "upcoming", "ongoing", "past"].map(function(s) {
+            var labels = { "": "All", upcoming: "Upcoming", ongoing: "Ongoing", past: "Past" };
+            var active = filterStatus === s;
+            return (
+              <button key={s} onClick={function() { handleFilterChange(s, undefined, undefined) }}
+                className={"px-3 py-1.5 text-[11px] font-bold tracking-wider rounded-lg transition-all " + (active ? "bg-amber-400 text-zinc-950" : "text-zinc-500 hover:text-white")}>
+                {labels[s]}
+              </button>
+            );
+          })}
+        </div>
+
+        <select value={filterType} onChange={function(e) { handleFilterChange(undefined, e.target.value, undefined) }}
+          className="bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-bold px-3 py-1.5 rounded-xl focus:outline-none focus:border-amber-400/50">
+          <option value="">All Types</option>
+          {["Conference", "Wedding", "Birthday", "Concert", "Festival", "Corporate", "Networking", "Sports", "Charity", "Exhibition", "Workshop", "Religious", "Graduation"].map(function(t) {
+            return <option key={t} value={t}>{t}</option>;
+          })}
+        </select>
+
+        <select value={filterSort} onChange={function(e) { handleFilterChange(undefined, undefined, e.target.value) }}
+          className="bg-zinc-900 border border-zinc-800 text-zinc-400 text-xs font-bold px-3 py-1.5 rounded-xl focus:outline-none focus:border-amber-400/50">
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="price_asc">Price ↑</option>
+          <option value="price_desc">Price ↓</option>
+        </select>
+
+        {(filterStatus || filterType) && (
+          <button onClick={function() { handleFilterChange("", "", "newest") }}
+            className="text-[11px] font-bold text-zinc-600 hover:text-white transition-all px-2 py-1">
+            ✕ Clear
+          </button>
+        )}
+      </div>
+
       {/* ── SEARCH RESULTS ── */}
-      {search && (
+      {search && !loading && (
         <div className="px-5 md:px-10 mb-6">
-          <p className="text-zinc-500 text-sm mb-4">
-            <span className="text-white font-bold">{filtered.length}</span> results for "{search}"
-          </p>
-          {filtered.length === 0 ? (
+          {events.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-5xl mb-3">🎟</p>
-              <p className="text-zinc-600 text-sm tracking-widest uppercase">No events found</p>
+              <p className="text-zinc-600 text-sm tracking-widest uppercase">No events found for "{search}"</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {filtered.map(ev => {
-                const typeCls = EVENT_TYPE_COLORS[ev.eventType] || EVENT_TYPE_COLORS.default;
-                return (
-                  <Link key={ev._id} to={`/events/${ev._id}`}
-                    className="group bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-600 hover:-translate-y-1 transition-all duration-200">
-                    <div className="h-36 overflow-hidden bg-zinc-800 relative">
-                      {ev.image ? <img src={ev.image} alt={ev.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        : <div className="w-full h-full flex items-center justify-center text-4xl">🎟</div>}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    </div>
-                    <div className="p-3">
-                      <p className="font-black text-white text-sm line-clamp-1 mb-1">{ev.title}</p>
-                      {ev.eventType && ev.eventType !== "General" && (
-                        <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border mb-1 inline-block ${typeCls}`}>{ev.eventType}</span>
-                      )}
-                      <p className="text-zinc-600 text-xs truncate">📍 {ev.location}</p>
-                    </div>
-                  </Link>
-                );
-              })}
+            <div>
+              <p className="text-zinc-500 text-sm mb-4"><span className="text-white font-bold">{events.length}</span> results</p>
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {events.map(function(ev) {
+                  var typeCls = EVENT_TYPE_COLORS[ev.eventType] || EVENT_TYPE_COLORS.default;
+                  return (
+                    <Link key={ev._id} to={"/events/" + ev._id}
+                      className="group bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-600 hover:-translate-y-1 transition-all duration-200">
+                      <div className="h-36 overflow-hidden bg-zinc-800 relative">
+                        {ev.image ? <img src={optimizeCloudinary(ev.image, 400)} alt={ev.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          : <div className="w-full h-full flex items-center justify-center text-4xl">🎟</div>}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      </div>
+                      <div className="p-3">
+                        <p className="font-black text-white text-sm line-clamp-1 mb-1">{ev.title}</p>
+                        {ev.eventType && ev.eventType !== "General" && (
+                          <span className={"text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border mb-1 inline-block " + typeCls}>{ev.eventType}</span>
+                        )}
+                        <p className="text-zinc-600 text-xs truncate">📍 {ev.location}</p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
@@ -380,12 +447,11 @@ export default function Events() {
 
       {/* ── SCROLL ROWS ── */}
       {!search && !loading && (
-        <>
+        <div className="animate-fadeIn">
           {live.length > 0 && <ScrollRow title="🟢 Happening Now" events={live} isAdmin={isAdmin} onDelete={setDeleteTarget} />}
           <ScrollRow title="📅 Upcoming Events" events={upcoming} isAdmin={isAdmin} onDelete={setDeleteTarget} />
           {past.length > 0 && <ScrollRow title="✓ Past Events" events={past} isAdmin={isAdmin} onDelete={setDeleteTarget} />}
 
-          {/* Divider */}
           <div className="px-5 md:px-10 my-6">
             <div className="flex items-center gap-4">
               <div className="flex-1 h-px bg-zinc-800" />
@@ -394,9 +460,8 @@ export default function Events() {
             </div>
           </div>
 
-          <LocationRows events={filtered} isAdmin={isAdmin} onDelete={setDeleteTarget} />
+          <LocationRows events={events} isAdmin={isAdmin} onDelete={setDeleteTarget} />
 
-          {/* ── SPOTLIGHT SECTION (after location rows) ── */}
           {events.length > 0 && (
             <>
               <div className="px-5 md:px-10 mt-6 mb-2">
@@ -409,8 +474,22 @@ export default function Events() {
               <SpotlightSection events={events} />
             </>
           )}
-        </>
+        </div>
       )}
+
+      {!search && !loading && totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pb-8">
+          <button onClick={function() { var next = Math.max(1, page - 1); setPage(next); fetchEvents(search, next, filterStatus, filterType, filterSort) }}
+            disabled={page <= 1}
+            className="px-4 py-2 rounded-xl border border-zinc-800 text-zinc-400 text-sm font-bold hover:border-zinc-600 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed">← Prev</button>
+          <span className="text-zinc-600 text-xs">Page {page} of {totalPages}</span>
+          <button onClick={function() { var next = Math.min(totalPages, page + 1); setPage(next); fetchEvents(search, next, filterStatus, filterType, filterSort) }}
+            disabled={page >= totalPages}
+            className="px-4 py-2 rounded-xl border border-zinc-800 text-zinc-400 text-sm font-bold hover:border-zinc-600 hover:text-white transition-all disabled:opacity-30 disabled:cursor-not-allowed">Next →</button>
+        </div>
+      )}
+
+      {!search && !loading && <BlogCarousel />}
 
       {loading && (
         <div className="flex justify-center py-20">

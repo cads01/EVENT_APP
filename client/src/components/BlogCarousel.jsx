@@ -1,132 +1,78 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
+import { API } from "../api";
+import { optimizeCloudinary } from "../utils/images";
 
-export default function BlogCarousel({ blogs = [] }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+export default function BlogCarousel() {
+  var [blogs, setBlogs] = useState([]);
+  var [loading, setLoading] = useState(true);
+  var rowRef = useRef(null);
 
-  useEffect(() => {
-    if (blogs.length === 0) return;
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % Math.ceil(blogs.length / 3));
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [blogs.length]);
+  useEffect(function() {
+    API.get("/blogs").then(function(res) {
+      setBlogs(res.data || []);
+    }).catch(function() {}).finally(function() { setLoading(false) });
+  }, []);
 
+  var scroll = function(dir) {
+    rowRef.current?.scrollBy({ left: dir * 340, behavior: "smooth" });
+  };
+
+  if (loading) return null;
   if (blogs.length === 0) return null;
 
-  const itemsPerPage = 3;
-  const totalPages = Math.ceil(blogs.length / itemsPerPage);
-  const startIdx = currentIndex * itemsPerPage;
-  const visibleBlogs = blogs.slice(startIdx, startIdx + itemsPerPage);
-
-  const goToPrevious = () => {
-    setCurrentIndex((prev) => (prev - 1 + totalPages) % totalPages);
-  };
-
-  const goToNext = () => {
-    setCurrentIndex((prev) => (prev + 1) % totalPages);
-  };
-
   return (
-    <div className="relative w-full">
-      {/* Blog cards grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {visibleBlogs.map((blog) => (
-          <div
-            key={blog._id}
-            className="bg-white rounded-xl shadow hover:shadow-lg transition overflow-hidden"
-          >
-            {/* Blog image */}
-            {blog.image && (
-              <img
-                src={blog.image}
-                alt={blog.title}
-                className="w-full h-40 object-cover"
-              />
-            )}
-
-            {/* Blog content */}
-            <div className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-xs font-bold text-blue-600">
-                  {blog.author?.name?.[0]?.toUpperCase() || "?"}
-                </div>
-                <div className="text-xs text-gray-600">
-                  <p className="font-semibold">{blog.author?.name || "Anonymous"}</p>
-                  <p className="text-gray-500">
-                    {new Date(blog.createdAt).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-
-              <h3 className="text-lg font-bold text-gray-800 mb-2 line-clamp-2">
-                {blog.title}
-              </h3>
-
-              <p className="text-sm text-gray-600 mb-4 line-clamp-3">
-                {blog.content}
-              </p>
-
-              {blog.event && (
-                <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded inline-block mb-3">
-                  About: {blog.event?.title}
-                </div>
-              )}
-
-              {/* Interactions */}
-              <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                <button className="flex items-center gap-1 hover:text-red-500 transition">
-                  ❤️ {blog.likes}
-                </button>
-                <span className="flex items-center gap-1">
-                  💬 {blog.comments?.length || 0}
-                </span>
-              </div>
-
-              <Link
-                to={`/blog/${blog._id}`}
-                className="text-blue-600 hover:text-blue-700 font-semibold text-sm"
-              >
-                Read More →
-              </Link>
-            </div>
-          </div>
-        ))}
+    <div className="px-5 md:px-10 mb-10">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-1">Stories</p>
+          <h2 className="text-white font-black text-lg">From the Blog</h2>
+        </div>
+        <div className="flex gap-2">
+          <button onClick={function() { scroll(-1) }}
+            className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all flex items-center justify-center">‹</button>
+          <button onClick={function() { scroll(1) }}
+            className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-400 hover:text-white hover:bg-zinc-700 transition-all flex items-center justify-center">›</button>
+        </div>
       </div>
 
-      {/* Navigation */}
-      {totalPages > 1 && (
-        <>
-          <div className="flex justify-center gap-4 mb-4">
-            <button
-              onClick={goToPrevious}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full w-10 h-10 flex items-center justify-center transition font-bold"
-            >
-              ‹
-            </button>
-            <div className="flex gap-2 items-center">
-              {Array.from({ length: totalPages }).map((_, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setCurrentIndex(idx)}
-                  className={`w-2 h-2 rounded-full transition ${
-                    idx === currentIndex ? "bg-blue-600 w-6" : "bg-gray-300"
-                  }`}
-                />
-              ))}
-            </div>
-            <button
-              onClick={goToNext}
-              className="bg-gray-200 hover:bg-gray-300 text-gray-800 rounded-full w-10 h-10 flex items-center justify-center transition font-bold"
-            >
-              ›
-            </button>
-          </div>
-          <p className="text-center text-sm text-gray-500">
-            {currentIndex + 1} / {totalPages}
-          </p>
-        </>
-      )}
+      <div ref={rowRef} className="flex gap-4 overflow-x-auto pb-3"
+        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
+        {blogs.map(function(blog) {
+          return (
+            <Link key={blog._id} to={"/blog/" + blog._id}
+              className="flex-shrink-0 w-72 group">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-600 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-black/60 transition-all duration-300">
+                {blog.image ? (
+                  <div className="h-40 overflow-hidden bg-zinc-800">
+                    <img src={optimizeCloudinary(blog.image, 400)} alt={blog.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  </div>
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-4xl bg-gradient-to-br from-zinc-800 to-zinc-900">📝</div>
+                )}
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-amber-400/20 flex items-center justify-center text-[10px] font-black text-amber-400">
+                      {blog.author?.name?.[0]?.toUpperCase() || "?"}
+                    </div>
+                    <div className="text-[11px]">
+                      <p className="text-zinc-300 font-semibold leading-tight">{blog.author?.name || "Anonymous"}</p>
+                      <p className="text-zinc-600">{new Date(blog.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</p>
+                    </div>
+                  </div>
+                  <h3 className="font-black text-white text-sm leading-tight line-clamp-2 mb-2">{blog.title}</h3>
+                  <p className="text-zinc-500 text-xs leading-relaxed line-clamp-2 mb-3">{blog.content}</p>
+                  <div className="flex items-center gap-3 text-[11px] text-zinc-600">
+                    <span>❤️ {blog.likes || 0}</span>
+                    <span>💬 {blog.comments?.length || 0}</span>
+                  </div>
+                </div>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }

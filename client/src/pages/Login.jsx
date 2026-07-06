@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
@@ -7,8 +7,56 @@ export default function Login() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const googleBtnRef = useRef(null);
+
+  useEffect(function() {
+    if (!import.meta.env.VITE_GOOGLE_CLIENT_ID) return;
+    var script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.onload = function() {
+      if (window.google && googleBtnRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: function(response) {
+            if (response.credential) {
+              handleGoogleLogin(response.credential);
+            }
+          },
+        });
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: "outline",
+          size: "large",
+          width: googleBtnRef.current.offsetWidth || 384,
+          text: "signin_with",
+          shape: "rectangular",
+          logo_alignment: "left",
+        });
+      }
+    };
+    document.body.appendChild(script);
+    return function() {
+      if (window.google) {
+        window.google.accounts.id.cancel();
+      }
+    };
+  }, []);
+
+  var handleGoogleLogin = async function(credential) {
+    try {
+      setGoogleLoading(true);
+      setError("");
+      var res = await API.post("/auth/google", { credential: credential });
+      login(res.data);
+      navigate("/");
+    } catch (err) {
+      setError(err.response?.data?.message || "Google login failed");
+    } finally { setGoogleLoading(false); }
+  };
 
   const handleSubmit = async () => {
     try {
@@ -97,6 +145,23 @@ export default function Login() {
               />
             </div>
           </div>
+
+          <div className="flex justify-end mt-1">
+            <Link to="/forgot-password" className="text-[11px] text-zinc-600 hover:text-amber-400 transition-all font-bold">Forgot password?</Link>
+          </div>
+
+          {import.meta.env.VITE_GOOGLE_CLIENT_ID && (
+            <>
+              <div className="flex items-center gap-3 my-4">
+                <div className="flex-1 h-px bg-zinc-800" />
+                <span className="text-[10px] tracking-widest uppercase text-zinc-600 font-bold">or</span>
+                <div className="flex-1 h-px bg-zinc-800" />
+              </div>
+              <div ref={googleBtnRef} className="w-full flex justify-center min-h-[40px]">
+                {googleLoading && <span className="text-xs text-zinc-600">Signing in with Google…</span>}
+              </div>
+            </>
+          )}
 
           <button onClick={handleSubmit} disabled={loading}
             className="w-full mt-6 bg-gradient-to-r from-amber-400 to-orange-400 text-zinc-950 py-3.5 rounded-xl font-black text-sm hover:from-amber-300 hover:to-orange-300 transition-all disabled:opacity-40 shadow-lg shadow-amber-500/20">

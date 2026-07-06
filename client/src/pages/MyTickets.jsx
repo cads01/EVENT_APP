@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { API } from "../api";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { motion } from "framer-motion";
+import { getCachedTickets, isOnline, cacheTicket } from "../utils/offlineWallet";
 
 const STATUS_CLS = {
   active:    "text-emerald-400 bg-emerald-400/10 border-emerald-400/25",
@@ -16,9 +18,20 @@ export default function MyTickets() {
   const [copied, setCopied] = useState(null);
 
   useEffect(() => {
-    API.get("/tickets/mine")
-      .then(res => setTickets(res.data))
-      .finally(() => setLoading(false));
+    if (isOnline()) {
+      API.get("/tickets/mine")
+        .then(res => {
+          setTickets(res.data);
+          res.data.forEach(t => cacheTicket(t));
+        })
+        .catch(() => {
+          setTickets(getCachedTickets());
+        })
+        .finally(() => setLoading(false));
+    } else {
+      setTickets(getCachedTickets());
+      setLoading(false);
+    }
   }, []);
 
   const copy = (code, id) => {

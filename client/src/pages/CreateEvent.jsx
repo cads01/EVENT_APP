@@ -18,6 +18,8 @@ export default function CreateEvent() {
     timezone: getUserTimezone(), eventType: "General",
     price: 0, capacity: 100,
     requiresModeration: false, specialCode: "",
+    videoTrailer: "", dressCode: "", bagPolicy: "",
+    amenities: "", matchmakingEnabled: false,
     faq: [{ question: "", answer: "" }]
   });
   const [image, setImage] = useState(null);
@@ -151,6 +153,49 @@ export default function CreateEvent() {
                 onChange={e => set("specialCode", e.target.value)} />
               <p className="text-xs text-zinc-600 mt-1.5">Leave empty for public events</p>
             </div>
+
+            {/* Video Trailer */}
+            <div>
+              <label className={labelCls}>Video Trailer URL (optional)</label>
+              <input className={inputCls} placeholder="https://youtube.com/watch?v=..."
+                onChange={e => set("videoTrailer", e.target.value)} />
+              <p className="text-xs text-zinc-600 mt-1.5">YouTube link for the hero carousel trailer</p>
+            </div>
+
+            {/* Dress Code */}
+            <div>
+              <label className={labelCls}>Dress Code (optional)</label>
+              <input className={inputCls} placeholder="e.g. Black tie, Casual, Smart casual"
+                onChange={e => set("dressCode", e.target.value)} />
+            </div>
+
+            {/* Bag Policy */}
+            <div>
+              <label className={labelCls}>Bag Policy (optional)</label>
+              <input className={inputCls} placeholder="e.g. No large bags, clear bags only"
+                onChange={e => set("bagPolicy", e.target.value)} />
+            </div>
+
+            {/* Amenities */}
+            <div>
+              <label className={labelCls}>Amenities (comma separated)</label>
+              <input className={inputCls} placeholder="WiFi, Parking, AC, Food Court"
+                onChange={e => set("amenities", e.target.value)} />
+            </div>
+
+            {/* Matchmaking toggle */}
+            <label className="flex items-start gap-3 cursor-pointer">
+              <div className="relative mt-0.5">
+                <input type="checkbox" className="sr-only"
+                  onChange={e => set("matchmakingEnabled", e.target.checked)} />
+                <div className={`w-10 h-5 rounded-full transition-colors ${form.matchmakingEnabled ? "bg-amber-400" : "bg-zinc-700"}`} />
+                <div className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${form.matchmakingEnabled ? "translate-x-5" : ""}`} />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-white">Enable solo attendee matchmaking</p>
+                <p className="text-xs text-zinc-600 mt-0.5">Allow solo attendees to connect with each other</p>
+              </div>
+            </label>
           </div>
 
           {/* FAQ */}
