@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { API } from "../api";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { motion } from "framer-motion";
 import { getCachedTickets, isOnline, cacheTicket } from "../utils/offlineWallet";
+import SectionHeader from "../components/SectionHeader";
+import { PageSkeleton } from "../components/Skeleton";
 
 const STATUS_CLS = {
   active:    "text-emerald-400 bg-emerald-400/10 border-emerald-400/25",
@@ -43,22 +44,13 @@ export default function MyTickets() {
   const upcoming = tickets.filter(t => t.event && new Date(t.event.date) > new Date());
   const past     = tickets.filter(t => t.event && new Date(t.event.date) <= new Date());
 
-  if (loading) return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-      <div className="w-10 h-10 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" />
-    </div>
-  );
+  if (loading) return <PageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pt-20 pb-16 px-5" style={{ fontFamily: "'Syne', sans-serif" }}>
-      <div className="max-w-3xl mx-auto">
+    <div className="min-h-screen bg-zinc-950 text-white pt-20 pb-16 px-5">
+      <div className="max-w-4xl mx-auto">
 
-        {/* Header */}
-        <div className="mb-8">
-          <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-1">Your Tickets</p>
-          <h1 className="text-4xl font-black">My Tickets</h1>
-          <p className="text-zinc-600 text-sm mt-1">All your RSVPs and event tickets in one place</p>
-        </div>
+        <SectionHeader eyebrow="Your Tickets" title="My Tickets" description="All your RSVPs and event tickets in one place" />
 
         {/* Checklist summary */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">

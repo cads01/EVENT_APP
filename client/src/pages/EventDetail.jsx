@@ -107,7 +107,7 @@ export default function EventDetail() {
   const fillPct = Math.min((event.attendees.length / event.capacity) * 100, 100);
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white">
       {showAttendees && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
           <div className="bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-md max-h-[80vh] flex flex-col shadow-2xl">

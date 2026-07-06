@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Events from "./pages/Events";
 import Navbar from "./components/Navbar";
+import { ToastProvider } from "./utils/Toast";
 
 const Login = lazy(function() { return import("./pages/Login") });
 const Register = lazy(function() { return import("./pages/Register") });
@@ -48,7 +49,7 @@ export default function App() {
   const showNav = !NO_NAV.includes(location.pathname);
 
   return (
-    <>
+    <ToastProvider>
       {showNav && <Navbar />}
       <Routes>
         <Route path="/" element={<Events />} />
@@ -123,6 +124,6 @@ export default function App() {
           </SafePage>
         } />
       </Routes>
-    </>
+    </ToastProvider>
   );
 }

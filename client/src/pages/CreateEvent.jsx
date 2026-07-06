@@ -62,7 +62,7 @@ export default function CreateEvent() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white py-12 px-4 pt-24" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white py-12 px-4 pt-24">
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
           <button onClick={() => navigate(-1)} className="text-zinc-600 hover:text-zinc-400 text-sm mb-4 block transition-colors">← Back</button>

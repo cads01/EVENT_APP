@@ -320,7 +320,7 @@ export default function Events() {
   var past     = events.filter(function(e) { return getStatus(e.date) === "past" });
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white relative" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white relative">
       <AmbientBackground />
 
       {deleteTarget && (

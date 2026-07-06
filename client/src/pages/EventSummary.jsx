@@ -33,7 +33,7 @@ export default function EventSummary() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white">
       {/* Hero */}
       <div className="relative h-72 md:h-[420px] overflow-hidden">
         {event.image ? (

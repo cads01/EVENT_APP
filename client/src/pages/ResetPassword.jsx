@@ -29,7 +29,7 @@ export default function ResetPassword() {
 
   if (!token) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
         <div className="max-w-sm w-full px-5 text-center">
           <p className="text-4xl mb-4">⚠️</p>
           <h1 className="text-2xl font-black mb-3">Invalid Link</h1>
@@ -42,7 +42,7 @@ export default function ResetPassword() {
 
   if (done) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
         <div className="max-w-sm w-full px-5 text-center">
           <p className="text-4xl mb-4">✅</p>
           <h1 className="text-2xl font-black mb-3">Password Reset</h1>
@@ -54,7 +54,7 @@ export default function ResetPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
       <div className="max-w-sm w-full px-5">
         <div className="mb-8 text-center">
           <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-2">Reset</p>

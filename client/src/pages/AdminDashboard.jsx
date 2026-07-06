@@ -355,7 +355,7 @@ export default function AdminDashboard() {
   if (!stats) return null;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white">
       <div className="h-px w-full bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400" />
 
       <div className="max-w-7xl mx-auto px-5 py-10">

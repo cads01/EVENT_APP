@@ -72,7 +72,7 @@ export default function BlogDetail() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white">
       {/* Hero image */}
       {blog.image && (
         <div className="relative h-72 md:h-[420px] overflow-hidden">

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import CheckInScanner from "../components/CheckInScanner";
+import { useToast } from "../utils/Toast";
 
 function StatusBadge({ status }) {
   const map = {
@@ -71,7 +71,7 @@ function AttendeeModal({ event, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/70 backdrop-blur-sm px-4 pb-4 md:pb-0">
-      <div className="bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <div className="bg-zinc-900 border border-zinc-700 rounded-3xl w-full max-w-lg max-h-[85vh] flex flex-col shadow-2xl">
         <div className="flex items-center justify-between p-6 border-b border-zinc-800">
           <div>
             <h2 className="font-black text-white text-lg">Attendees & Tickets</h2>
@@ -113,6 +113,7 @@ export default function OrganizerDashboard() {
   const [emailMessage, setEmailMessage] = useState("");
   const [emailSending, setEmailSending] = useState(false);
   const navigate = useNavigate();
+  const toast = useToast();
 
   useEffect(function() {
     API.get("/events/organizer/my-events")
@@ -141,7 +142,7 @@ export default function OrganizerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white">
       {selected && <AttendeeModal event={selected} onClose={function() { setSelected(null) }} />}
       <div className="h-px w-full bg-gradient-to-r from-sky-400 via-emerald-400 to-amber-400" />
       <div className="max-w-5xl mx-auto px-5 py-10">
@@ -232,9 +233,9 @@ export default function OrganizerDashboard() {
                       </div>
                       <p className="text-zinc-500 text-xs mb-2">📍 {ev.location} · 📅 {new Date(ev.date).toDateString()}</p>
                       <div className="flex items-center justify-between mb-2">
-                        <span className={"text-sm font-black " + (ev.price === 0 ? "text-emerald-400" : "text-amber-400")}>
-                          {ev.price === 0 ? "Free" : ev.price.toLocaleString()}
-                        </span>
+                          <span className={"text-sm font-black " + (ev.price === 0 ? "text-emerald-400" : "text-amber-400")}>
+                            {ev.price === 0 ? "Free" : "₦" + ev.price.toLocaleString()}
+                          </span>
                         <span className="text-xs text-zinc-600">{activeTickets}/{ev.capacity} attending</span>
                       </div>
                       <div className="w-full bg-zinc-800 rounded-full h-1">
@@ -254,8 +255,8 @@ export default function OrganizerDashboard() {
                     <button onClick={async function() {
                       try {
                         await API.post("/notifications/remind/" + ev._id);
-                        alert("Reminder sent to all ticket holders");
-                      } catch (e) { alert("Failed: " + (e.response?.data?.message || e.message)); }
+                        toast("Reminder sent to all ticket holders", "success");
+                      } catch (e) { toast(e.response?.data?.message || "Failed to send reminder", "error"); }
                     }}
                       className="flex-1 py-3 text-xs font-bold text-purple-400 hover:bg-purple-400/5 transition-all flex items-center justify-center gap-1.5">
                       🔔 Remind
@@ -362,12 +363,12 @@ export default function OrganizerDashboard() {
                   className="w-full bg-zinc-800 border border-zinc-700 text-white rounded-xl px-4 py-3 text-sm resize-none" />
               </div>
               <button disabled={emailSending || !emailMessage} onClick={async function() {
-                try {
-                  setEmailSending(true);
-                  var res = await API.post("/notifications/broadcast-email", { eventId: emailEvent._id, subject: emailSubject, message: emailMessage });
-                  alert(res.data.message);
-                  setEmailEvent(null);
-                } catch (e) { alert("Failed: " + (e.response?.data?.message || e.message)); }
+                  try {
+                    setEmailSending(true);
+                    var res = await API.post("/notifications/broadcast-email", { eventId: emailEvent._id, subject: emailSubject, message: emailMessage });
+                    toast(res.data.message, "success");
+                    setEmailEvent(null);
+                  } catch (e) { toast("Failed: " + (e.response?.data?.message || e.message), "error"); }
                 finally { setEmailSending(false); }
               }}
                 className="w-full bg-amber-400 text-zinc-950 py-3 rounded-xl text-sm font-black hover:bg-amber-300 transition-all disabled:opacity-40">

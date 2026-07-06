@@ -41,7 +41,7 @@ export default function Trash() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white py-12 px-4" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white py-12 px-4">
       <div className="h-px w-full fixed top-0 left-0 bg-gradient-to-r from-red-500 via-rose-400 to-orange-400" />
 
       {/* Purge confirm modal */}

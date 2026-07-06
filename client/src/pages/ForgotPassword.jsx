@@ -23,7 +23,7 @@ export default function ForgotPassword() {
 
   if (sent) {
     return (
-      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
         <div className="max-w-sm w-full px-5 text-center">
           <p className="text-4xl mb-4">📬</p>
           <h1 className="text-2xl font-black mb-3">Check Your Email</h1>
@@ -35,7 +35,7 @@ export default function ForgotPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white flex items-center justify-center">
       <div className="max-w-sm w-full px-5">
         <div className="mb-8 text-center">
           <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-2">Recovery</p>
