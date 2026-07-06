@@ -13,7 +13,7 @@ import FAQ from "../components/FAQ";
 import Contact from "../components/Contact";
 import SectionHeader from "../components/SectionHeader";
 import { PageSkeleton } from "../components/Skeleton";
-import { btnPrimary, btnSecondary, inputCls, spinnerCls } from "../utils/design";
+import { btnPrimary, btnSecondary, inputCls, spinnerCls, containerWide } from "../utils/design";
 
 const HeroCarousel = lazy(function() { return import("../components/HeroCarousel") });
 const Recommendations = lazy(function() { return import("../components/Recommendations") });
@@ -51,7 +51,7 @@ function SearchRow({ search, onSearchChange, filterStatus, filterType, filterSor
   const types = ["Concert", "Workshop", "Conference", "Festival", "Corporate", "Wedding", "Sports"];
 
   return (
-    <div className="px-5 md:px-10 pt-6 pb-4 relative z-10">
+    <div className="pt-6 pb-4 relative z-10">
       <div className={"max-w-4xl mx-auto bg-zinc-900/80 backdrop-blur-xl border rounded-2xl p-5 transition-all duration-300 " + (focused ? "border-amber-400/40 shadow-lg shadow-amber-500/5" : "border-zinc-800")}>
         <div className="relative flex items-center gap-3">
           <div className="relative flex-1">
@@ -138,7 +138,7 @@ function ScrollRow({ title, events, isAdmin, onDelete, sectionNum }) {
 
   return (
     <div className="mb-10 relative">
-      <div className="flex items-center justify-between px-5 md:px-10 mb-4">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           {sectionNum !== undefined && (
             <span className="text-[10px] font-black text-zinc-700 tracking-widest">0{sectionNum}</span>
@@ -157,7 +157,7 @@ function ScrollRow({ title, events, isAdmin, onDelete, sectionNum }) {
       <div className="relative">
         <div className="absolute left-0 top-0 bottom-0 w-16 bg-gradient-to-r from-zinc-950 to-transparent z-10 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-zinc-950 to-transparent z-10 pointer-events-none" />
-        <div ref={rowRef} className="flex gap-4 overflow-x-auto pb-3 px-5 md:px-10 scrollbar-none"
+        <div ref={rowRef} className="flex gap-4 overflow-x-auto pb-3 -mx-5 md:-mx-10 px-5 md:px-10 scrollbar-none"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
           {events.map(function(ev, idx) {
             const status = getStatus(ev.date);
@@ -259,7 +259,7 @@ function SpotlightSection({ events }) {
   const typeCls = EVENT_TYPE_COLORS[ev.eventType] || EVENT_TYPE_COLORS.default;
 
   return (
-    <div className="px-5 md:px-10 py-10 relative">
+    <div className="py-10 relative">
       <div className="flex items-center gap-4 mb-6">
         <div>
           <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-1">Featured</p>
@@ -471,11 +471,11 @@ export default function Events() {
         <HeroCarousel events={events} />
       </Suspense>
 
-      <div className="relative">
+      <div className={"relative " + containerWide}>
         <div className="absolute -top-16 left-0 right-0 h-16 bg-gradient-to-b from-transparent to-zinc-950 pointer-events-none" />
 
         <div className="pt-6">
-          <Suspense fallback={<div className="h-32 bg-zinc-900 animate-pulse mx-5 md:mx-10 rounded-2xl" />}>
+          <Suspense fallback={<div className="h-32 bg-zinc-900 animate-pulse rounded-2xl" />}>
             <Recommendations user={user} />
           </Suspense>
         </div>
@@ -486,7 +486,7 @@ export default function Events() {
           user={user} isAdmin={isAdmin} events={events} loading={loading} />
 
         {search && !loading && (
-          <div className="px-5 md:px-10 mb-6">
+          <div className="mb-6">
             {events.length === 0 ? (
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-center py-20">
                 <p className="text-5xl mb-4">🎟</p>
@@ -534,7 +534,7 @@ export default function Events() {
             <ScrollRow title="📅 Upcoming Events" events={upcoming} isAdmin={isAdmin} onDelete={setDeleteTarget} sectionNum={nextSection()} />
             {past.length > 0 && <ScrollRow title="✓ Past Events" events={past} isAdmin={isAdmin} onDelete={setDeleteTarget} sectionNum={nextSection()} />}
 
-            <div className="px-5 md:px-10 my-6">
+            <div className="my-6">
               <div className="flex items-center gap-4">
                 <div className="flex-1 h-px bg-zinc-800" />
                 <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-600 font-bold">By Location</p>
@@ -552,7 +552,7 @@ export default function Events() {
 
             {events.length > 0 && (
               <>
-                <div className="px-5 md:px-10 mt-6 mb-2">
+                <div className="mt-6 mb-2">
                   <div className="flex items-center gap-4">
                     <div className="flex-1 h-px bg-zinc-800" />
                     <p className="text-[10px] tracking-[0.3em] uppercase text-zinc-600 font-bold">Spotlight</p>

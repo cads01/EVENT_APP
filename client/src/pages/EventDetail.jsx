@@ -16,6 +16,7 @@ import Matchmaking from "../components/Matchmaking";
 import PostEventRetargeting from "../components/PostEventRetargeting";
 import EventPosts from "../components/EventPosts";
 import { cacheTicket, cacheEventData } from "../utils/offlineWallet";
+import { containerNarrow } from "../utils/design";
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -186,7 +187,7 @@ export default function EventDetail() {
         )}
       </div>
 
-      <div className="max-w-4xl mx-auto px-5 py-10">
+      <div className={containerNarrow + " py-10"}>
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-8 mb-4">
           <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             className="text-4xl font-black mb-8 leading-tight">{event.title}</motion.h1>

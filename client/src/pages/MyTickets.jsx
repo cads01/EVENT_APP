@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { getCachedTickets, isOnline, cacheTicket } from "../utils/offlineWallet";
 import SectionHeader from "../components/SectionHeader";
 import { PageSkeleton } from "../components/Skeleton";
+import { containerNarrow } from "../utils/design";
 
 const STATUS_CLS = {
   active:    "text-emerald-400 bg-emerald-400/10 border-emerald-400/25",
@@ -47,8 +48,8 @@ export default function MyTickets() {
   if (loading) return <PageSkeleton />;
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white pt-20 pb-16 px-5">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-zinc-950 text-white pt-20 pb-16">
+      <div className={containerNarrow}>
 
         <SectionHeader eyebrow="Your Tickets" title="My Tickets" description="All your RSVPs and event tickets in one place" />
 

@@ -3,6 +3,7 @@ import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 import CheckInScanner from "../components/CheckInScanner";
 import { useToast } from "../utils/Toast";
+import { containerCls } from "../utils/design";
 
 function StatusBadge({ status }) {
   const map = {
@@ -145,7 +146,7 @@ export default function OrganizerDashboard() {
     <div className="min-h-screen bg-zinc-950 text-white">
       {selected && <AttendeeModal event={selected} onClose={function() { setSelected(null) }} />}
       <div className="h-px w-full bg-gradient-to-r from-sky-400 via-emerald-400 to-amber-400" />
-      <div className="max-w-5xl mx-auto px-5 py-10">
+      <div className={containerCls + " py-10"}>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-5 mb-10">
           <div>
             <p className="text-[10px] tracking-[0.35em] uppercase text-emerald-400 font-bold mb-2">Organizer Hub</p>

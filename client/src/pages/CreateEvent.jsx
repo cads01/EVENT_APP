@@ -2,6 +2,7 @@ import { useState } from "react";
 import { API } from "../api";
 import { useNavigate } from "react-router-dom";
 import { getUserTimezone, COMMON_TIMEZONES } from "../utils/timeFormatting";
+import { containerNarrow } from "../utils/design";
 
 const inputCls = "w-full bg-zinc-800/50 border border-zinc-700 text-white placeholder-zinc-600 p-3.5 rounded-xl text-sm focus:outline-none focus:border-amber-400/50 transition-all";
 const labelCls = "block text-xs font-bold tracking-widest uppercase text-zinc-500 mb-2";
@@ -62,8 +63,8 @@ export default function CreateEvent() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white py-12 px-4 pt-24">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-zinc-950 text-white py-12 pt-24">
+      <div className={containerNarrow}>
         <div className="mb-8">
           <button onClick={() => navigate(-1)} className="text-zinc-600 hover:text-zinc-400 text-sm mb-4 block transition-colors">← Back</button>
           <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-2">New Event</p>

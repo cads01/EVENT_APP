@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
+import { containerNarrow } from "../utils/design";
 
 export default function BlogDetail() {
   const { id } = useParams();
@@ -81,7 +82,7 @@ export default function BlogDetail() {
         </div>
       )}
 
-      <div className="max-w-3xl mx-auto px-5 py-10">
+      <div className={containerNarrow + " py-10"}>
         <button onClick={() => navigate(-1)} className="text-zinc-600 hover:text-zinc-400 text-sm mb-6 block transition-colors">← Back</button>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-3xl overflow-hidden">

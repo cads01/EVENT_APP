@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { API } from "../api";
 import { useAuth } from "../context/AuthContext";
+import { containerNarrow } from "../utils/design";
 
 const EVENT_CATEGORIES = [
   "General", "Conference", "Wedding", "Birthday", "Concert",
@@ -96,7 +97,7 @@ export default function Settings() {
     <div className="min-h-screen bg-zinc-950 text-white">
       <div className="h-px w-full bg-gradient-to-r from-sky-400 via-amber-400 to-orange-400" />
 
-      <div className="max-w-3xl mx-auto px-5 py-10">
+      <div className={containerNarrow + " py-10"}>
         <div className="mb-10">
           <p className="text-[10px] tracking-[0.35em] uppercase text-amber-400 font-bold mb-2">Account</p>
           <h1 className="text-5xl font-black leading-none">Settings</h1>
