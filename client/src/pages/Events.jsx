@@ -1,15 +1,19 @@
 import { useEffect, useState, useRef, lazy, Suspense } from "react";
+import { motion } from "framer-motion";
 import { API } from "../api";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { optimizeCloudinary } from "../utils/images";
 import BlogCarousel from "../components/BlogCarousel";
+import ErrorBoundary from "../components/ErrorBoundary";
+import AmbientBackground from "../components/AmbientBackground";
 import About from "../components/About";
 import FAQ from "../components/FAQ";
 import Contact from "../components/Contact";
 
 const HeroCarousel = lazy(function() { return import("../components/HeroCarousel") });
 const Recommendations = lazy(function() { return import("../components/Recommendations") });
+const InteractiveGlobe = lazy(function() { return import("../components/InteractiveGlobe") });
 
 const EVENT_TYPE_COLORS = {
   Wedding:    "text-pink-400 bg-pink-400/10 border-pink-400/25",
@@ -52,11 +56,15 @@ function ScrollRow({ title, events, isAdmin, onDelete }) {
 
       <div ref={rowRef} className="flex gap-4 overflow-x-auto pb-3 px-5 md:px-10"
         style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-        {events.map(ev => {
+        {events.map((ev, idx) => {
           const status = getStatus(ev.date);
           const typeCls = EVENT_TYPE_COLORS[ev.eventType] || EVENT_TYPE_COLORS.default;
           return (
-            <div key={ev._id} className="flex-shrink-0 w-64 group relative">
+            <motion.div key={ev._id} className="flex-shrink-0 w-64 group relative"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: idx * 0.05 }}>
               <Link to={`/events/${ev._id}`} className="block">
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl overflow-hidden hover:border-zinc-600 hover:-translate-y-1.5 hover:shadow-2xl hover:shadow-black/60 transition-all duration-300">
                   <div className="relative h-40 overflow-hidden bg-zinc-800">
@@ -115,7 +123,7 @@ function ScrollRow({ title, events, isAdmin, onDelete }) {
                     className="bg-red-500/90 text-white text-[10px] font-black px-3 py-1.5 rounded-lg shadow">Del</button>
                 </div>
               )}
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -312,7 +320,8 @@ export default function Events() {
   var past     = events.filter(function(e) { return getStatus(e.date) === "past" });
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white" style={{ fontFamily: "'Syne', sans-serif" }}>
+    <div className="min-h-screen bg-zinc-950 text-white relative" style={{ fontFamily: "'Syne', sans-serif" }}>
+      <AmbientBackground />
 
       {deleteTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4">
@@ -461,6 +470,13 @@ export default function Events() {
           </div>
 
           <LocationRows events={events} isAdmin={isAdmin} onDelete={setDeleteTarget} />
+
+          {/* ── INTERACTIVE GLOBE VFX ── */}
+          <ErrorBoundary name="Globe">
+            <Suspense fallback={<div className="h-64 flex items-center justify-center"><div className="w-8 h-8 rounded-full border-2 border-amber-400 border-t-transparent animate-spin" /></div>}>
+              <InteractiveGlobe events={events} />
+            </Suspense>
+          </ErrorBoundary>
 
           {events.length > 0 && (
             <>
